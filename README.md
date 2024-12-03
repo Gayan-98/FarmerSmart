@@ -100,3 +100,6 @@ The system is divided into three main layers:
 - **Python 3.x** (for Flask API)
 - **MySQL Database** (for storing data)
 
+# License
+
+This project is licensed under the [MIT License](LICENSE).
