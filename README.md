@@ -8,7 +8,6 @@ FarmerSmart is a mobile application designed to support farmers in improving cro
 
 ![System Diagram](image.png)
 
-
 ### **System Architecture**
 The system is divided into three main layers:
 
@@ -29,7 +28,7 @@ The system is divided into three main layers:
    
    - **Functionality**:  
      - Upload crop images via the app.
-     - The CNN model processes the images and identifies any diseases or pests present.
+     - The CNN model processes the images and identifies any diseases present.
      - A tailored solution, including treatment suggestions and preventive measures, is provided.
      - The solution is instantly displayed on the app.
    
@@ -75,6 +74,19 @@ The system is divided into three main layers:
    - **Value**:  
      - Increases the value of the farmer's crops by providing accurate assessments of rice quality.
      - Allows farmers to make informed decisions about how to sell or process their harvest for the best price.
+
+#### 5. **Real-Time Notification System**
+   - **Description**:  
+     The real-time notification system helps keep farmers informed about any urgent matters, such as disease outbreaks, pest infestations, or new updates from agricultural experts.
+   
+   - **Functionality**:  
+     - Farmers and agricultural experts receive push notifications about important updates in real time.
+     - Notifications are sent through **Firebase Cloud Messaging (FCM)**, alerting users to potential crop issues, such as detected pests or diseases.
+     - Users can adjust notification settings to receive alerts based on their preferences.
+   
+   - **Value**:  
+     - Ensures timely intervention by keeping farmers and experts informed of critical situations.
+     - Enhances the efficiency of communication between farmers and agricultural experts, reducing response times to potential threats.
 
 ## Technologies Used
 
