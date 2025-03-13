@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { View, TouchableOpacity, StyleSheet, Image } from "react-native";
 import { Text } from "react-native-paper";
-import * as ImagePicker from "expo-image-picker"; // Import expo-image-picker
+// import * as ImagePicker from "expo-image-picker"; // Import expo-image-picker
 import Button from "../components/Button"; // Assume this is your custom button component
 import { theme } from "../core/theme";
 
