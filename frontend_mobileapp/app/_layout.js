@@ -30,9 +30,8 @@ export default function RootLayout() {
   }
 
   return (
-    <>
-      <StatusBar style="auto" />
-      <Stack />
-    </>
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="(main)" options={{ headerShown: false }} />
+    </Stack>
   );
 } 
