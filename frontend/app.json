@@ -18,7 +18,8 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/app.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.anonymous.FarmerSmart"
     },
     "web": {
       "favicon": "./assets/app.png"
