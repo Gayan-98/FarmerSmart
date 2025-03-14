@@ -1,10 +1,12 @@
-import { ScrollView, StyleSheet, View, TouchableOpacity, Dimensions, SafeAreaView } from 'react-native';
+import { ScrollView, StyleSheet, View, TouchableOpacity, Dimensions, SafeAreaView, Image, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { StatusBar } from 'expo-status-bar';
+import * as ImagePicker from 'expo-image-picker';
+import { useState } from 'react';
 
 const { width } = Dimensions.get('window');
 
@@ -36,6 +38,75 @@ const TipCard = ({ icon, tip }) => (
 );
 
 export default function PestDetectionScreen() {
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [prediction, setPrediction] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const pickImage = async () => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: 'image',
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 1,
+        base64: true,
+      });
+
+      if (!result.canceled) {
+        setSelectedImage(result.assets[0]);
+        setPrediction(null);
+      }
+    } catch (error) {
+      console.error('Error picking image:', error);
+      Alert.alert(
+        'Error',
+        'Failed to pick image. Please try again.'
+      );
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!selectedImage) return;
+    
+    setLoading(true);
+    try {
+      // Convert base64 image to blob
+      const base64Data = selectedImage.base64;
+      const imageBlob = await fetch(`data:image/jpeg;base64,${base64Data}`).then(r => r.blob());
+      
+      const formData = new FormData();
+      formData.append('image', imageBlob, 'image.jpg');
+
+      console.log('Sending request with image data...');
+
+      const apiResponse = await fetch('http://127.0.0.1:5000/predict', {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'Accept': 'application/json',
+        },
+      });
+
+      if (!apiResponse.ok) {
+        const errorText = await apiResponse.text();
+        console.error('Server response:', errorText);
+        throw new Error(`Server error: ${errorText}`);
+      }
+
+      const data = await apiResponse.json();
+      console.log('Response data:', data);
+      setPrediction(data);
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      Alert.alert(
+        'Error',
+        'Failed to upload image. Please try again.'
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar style="light" />
@@ -62,9 +133,43 @@ export default function PestDetectionScreen() {
               title="Upload Image"
               description="Analyze existing photos from your gallery"
               icon="photo-library"
-              onPress={() => {}}
+              onPress={pickImage}
             />
           </View>
+
+          {selectedImage && (
+            <View style={styles.previewSection}>
+              <Image 
+                source={{ uri: selectedImage.uri }}
+                style={styles.previewImage}
+              />
+              
+              <TouchableOpacity 
+                style={[
+                  styles.submitButton,
+                  loading && styles.submitButtonDisabled
+                ]}
+                onPress={handleSubmit}
+                disabled={loading}
+              >
+                <ThemedText style={styles.submitButtonText}>
+                  {loading ? 'Analyzing...' : 'Analyze Image'}
+                </ThemedText>
+              </TouchableOpacity>
+
+              {prediction && prediction.success && (
+                <View style={styles.predictionResult}>
+                  <MaterialIcons name="check-circle" size={32} color="#4CAF50" />
+                  <ThemedText style={styles.predictionText}>
+                    Class {prediction.predicted_class}
+                  </ThemedText>
+                  <ThemedText style={styles.predictionDescription}>
+                    Analysis completed successfully
+                  </ThemedText>
+                </View>
+              )}
+            </View>
+          )}
 
           <View style={styles.statsSection}>
             <View style={styles.statCard}>
@@ -257,5 +362,60 @@ const styles = StyleSheet.create({
     color: '#4CAF50',
     fontSize: 14,
     fontWeight: '600',
-  }
+  },
+  previewSection: {
+    padding: 20,
+    alignItems: 'center',
+  },
+  previewImage: {
+    width: '100%',
+    height: 200,
+    borderRadius: 12,
+    marginBottom: 15,
+  },
+  predictionResult: {
+    backgroundColor: '#FFFFFF',
+    padding: 20,
+    borderRadius: 12,
+    width: '100%',
+    alignItems: 'center',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 1.41,
+  },
+  predictionText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333',
+    marginTop: 10,
+  },
+  predictionDescription: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 5,
+  },
+  submitButton: {
+    backgroundColor: '#4CAF50',
+    paddingVertical: 15,
+    paddingHorizontal: 30,
+    borderRadius: 12,
+    width: '100%',
+    alignItems: 'center',
+    marginVertical: 20,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  submitButtonDisabled: {
+    backgroundColor: '#A5D6A7',
+  },
+  submitButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
 }); 
