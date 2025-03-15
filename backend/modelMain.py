@@ -4,14 +4,14 @@ from tensorflow.keras.models import load_model
 import numpy as np
 import cv2
 
-app = Flask(__modelMain__)
+app = Flask(__name__) 
 
 # Load models into memory
 models = {
-    "disease_detection": load_model('models/disease_model.keras'),
-    "pest_detection": load_model('models/pest_model.keras'),
-    "weed_seed_detection": load_model('models/weed_seed_model.keras'),
-    "rice_quality_detection": load_model('models/rice_quality_model.keras')
+    "disease_detection": load_model('./models/disease_model.keras'),
+    # "pest_detection": load_model('models/pest_model.keras'),
+    # "weed_seed_detection": load_model('models/weed_seed_model.keras'),
+    # "rice_quality_detection": load_model('models/rice_quality_model.keras')
 }
 
 # Preprocessing function
@@ -55,5 +55,5 @@ def predict():
 
     return jsonify({'prediction': predicted_label, 'service_used': service})
 
-if __name__ == '__modelMain__':
+if __name__ == '__main__':
     app.run(debug=True)
