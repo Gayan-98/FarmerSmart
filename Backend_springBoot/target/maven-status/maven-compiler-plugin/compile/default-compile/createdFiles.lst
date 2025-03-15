@@ -1,9 +1,0 @@
-com/research/farmer_smart/repository/TestRepository.class
-com/research/farmer_smart/service/serviceImpl/TestServiceImpl.class
-com/research/farmer_smart/config/MongoConfig.class
-com/research/farmer_smart/controller/request/TestRequest.class
-com/research/farmer_smart/controller/response/TestResponse.class
-com/research/farmer_smart/FarmerSmartApplication.class
-com/research/farmer_smart/controller/TestController.class
-com/research/farmer_smart/service/TestService.class
-com/research/farmer_smart/model/Test.class
