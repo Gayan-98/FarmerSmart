@@ -1,4 +1,4 @@
-import { ScrollView, StyleSheet, View, Dimensions } from 'react-native';
+import { ScrollView, StyleSheet, View, TouchableOpacity, Dimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { ThemedText } from '@/components/ThemedText';
@@ -6,8 +6,14 @@ import { useColorScheme } from '@/hooks/useColorScheme';
 import { useState, useEffect } from 'react';
 import * as Location from 'expo-location';
 import { WEATHER_API_KEY, WEATHER_BASE_URL } from '@/constants/Config';
+import { router } from 'expo-router';
 
-const { width } = Dimensions.get('window');
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const scale = SCREEN_WIDTH / 375;
+
+const normalize = (size) => {
+  return Math.round(scale * size);
+};
 
 const getWeatherIcon = (iconCode) => {
   const iconMapping = {
@@ -142,26 +148,34 @@ export default function WeatherDetailsScreen() {
 
   return (
     <ScrollView style={[styles.container, { backgroundColor }]}>
-      <LinearGradient
-        colors={['#4361EE', '#3F37C9']}
-        style={styles.header}
-      >
-        <View style={styles.mainWeather}>
-          <MaterialIcons name="wb-sunny" size={64} color="#FFD60A" />
-          <ThemedText style={styles.temperature}>
-            {Math.round(weatherData?.main?.temp)}°C
-          </ThemedText>
-          <ThemedText style={styles.weatherDescription}>
-            {weatherData?.weather[0]?.description}
-          </ThemedText>
-          <View style={styles.locationInfo}>
-            <MaterialIcons name="location-on" size={20} color="#FFFFFF" />
-            <ThemedText style={styles.locationText}>
-              {weatherData?.name}, {weatherData?.sys?.country}
+      <View style={styles.headerContainer}>
+        <TouchableOpacity 
+          style={styles.backButton}
+          onPress={() => router.back()}
+        >
+          <MaterialIcons name="arrow-back" size={normalize(24)} color="#FFFFFF" />
+        </TouchableOpacity>
+        <LinearGradient
+          colors={['#4361EE', '#3F37C9']}
+          style={styles.header}
+        >
+          <View style={styles.mainWeather}>
+            <MaterialIcons name="wb-sunny" size={64} color="#FFD60A" />
+            <ThemedText style={styles.temperature}>
+              {Math.round(weatherData?.main?.temp)}°C
             </ThemedText>
+            <ThemedText style={styles.weatherDescription}>
+              {weatherData?.weather[0]?.description}
+            </ThemedText>
+            <View style={styles.locationInfo}>
+              <MaterialIcons name="location-on" size={20} color="#FFFFFF" />
+              <ThemedText style={styles.locationText}>
+                {weatherData?.name}, {weatherData?.sys?.country}
+              </ThemedText>
+            </View>
           </View>
-        </View>
-      </LinearGradient>
+        </LinearGradient>
+      </View>
 
       <View style={styles.detailsContainer}>
         <ThemedText style={styles.sectionTitle}>Weather Details</ThemedText>
@@ -233,6 +247,18 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  headerContainer: {
+    position: 'relative',
+  },
+  backButton: {
+    position: 'absolute',
+    top: normalize(50),
+    left: normalize(20),
+    zIndex: 10,
+    padding: normalize(8),
+    borderRadius: normalize(20),
+    backgroundColor: 'rgba(0,0,0,0.2)',
+  },
   header: {
     padding: 20,
     borderBottomLeftRadius: 30,
@@ -283,7 +309,7 @@ const styles = StyleSheet.create({
     gap: 15,
   },
   detailCard: {
-    width: (width - 55) / 2,
+    width: (SCREEN_WIDTH - 55) / 2,
     padding: 15,
     borderRadius: 15,
     flexDirection: 'row',
