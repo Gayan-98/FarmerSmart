@@ -7,6 +7,9 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { StatusBar } from 'expo-status-bar';
 import * as ImagePicker from 'expo-image-picker';
 import { useState } from 'react';
+import { collection, addDoc } from 'firebase/firestore';
+import { db, auth } from '@/config/firebase';
+import { useAuth } from '@/context/AuthContext';
 
 const { width } = Dimensions.get('window');
 
@@ -38,9 +41,38 @@ const TipCard = ({ icon, tip }) => (
 );
 
 export default function PestDetectionScreen() {
+  const { user } = useAuth();
   const [selectedImage, setSelectedImage] = useState(null);
   const [prediction, setPrediction] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  const savePestDetection = async (predictionData) => {
+    try {
+      const pestDetectionRef = collection(db, 'pestDetections');
+      const detectionData = {
+        userId: 'user123',
+        timestamp: new Date().toISOString(),
+        prediction: {
+          class: predictionData.predicted_class || 'Unknown',
+          confidence: parseFloat(predictionData.confidence) || 0
+        },
+        imageUrl: selectedImage?.uri || null,
+        createdAt: new Date().getTime()
+      };
+
+      // Remove any undefined values
+      Object.keys(detectionData).forEach(key => 
+        detectionData[key] === undefined && delete detectionData[key]
+      );
+
+      const docRef = await addDoc(pestDetectionRef, detectionData);
+      console.log('Detection saved with ID:', docRef.id);
+      Alert.alert('Success', 'Detection results saved successfully');
+    } catch (error) {
+      console.error('Error saving to database:', error);
+      Alert.alert('Error', 'Failed to save detection results');
+    }
+  };
 
   const pickImage = async () => {
     try {
@@ -70,14 +102,11 @@ export default function PestDetectionScreen() {
     
     setLoading(true);
     try {
-      // Convert base64 image to blob
       const base64Data = selectedImage.base64;
       const imageBlob = await fetch(`data:image/jpeg;base64,${base64Data}`).then(r => r.blob());
       
       const formData = new FormData();
       formData.append('image', imageBlob, 'image.jpg');
-
-      console.log('Sending request with image data...');
 
       const apiResponse = await fetch('http://127.0.0.1:5000/predict', {
         method: 'POST',
@@ -89,19 +118,18 @@ export default function PestDetectionScreen() {
 
       if (!apiResponse.ok) {
         const errorText = await apiResponse.text();
-        console.error('Server response:', errorText);
         throw new Error(`Server error: ${errorText}`);
       }
 
       const data = await apiResponse.json();
-      console.log('Response data:', data);
       setPrediction(data);
+      
+      // Save to Firebase with manual user ID
+      await savePestDetection(data);
+      
     } catch (error) {
-      console.error('Error uploading image:', error);
-      Alert.alert(
-        'Error',
-        'Failed to upload image. Please try again.'
-      );
+      console.error('Error:', error);
+      Alert.alert('Error', 'Failed to process image');
     } finally {
       setLoading(false);
     }
