@@ -1,4 +1,4 @@
-import { View, StyleSheet, TouchableOpacity, TextInput, Dimensions, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, TextInput, Dimensions, KeyboardAvoidingView, Platform, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ThemedText } from '@/components/ThemedText';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
@@ -12,7 +12,7 @@ const scale = SCREEN_WIDTH / 375;
 const normalize = (size) => Math.round(scale * size);
 
 export default function LoginScreen() {
-  const { signIn } = useAuth();
+  const { signIn, signInWithGoogle } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -83,6 +83,19 @@ export default function LoginScreen() {
               <ThemedText style={styles.dividerText}>OR</ThemedText>
               <View style={styles.dividerLine} />
             </View>
+
+            <TouchableOpacity 
+              style={styles.googleButton}
+              onPress={signInWithGoogle}
+            >
+              <Image 
+                source={require('@/assets/images/google-logo.png')} 
+                style={styles.googleIcon}
+              />
+              <ThemedText style={styles.googleButtonText}>
+                Sign in with Google
+              </ThemedText>
+            </TouchableOpacity>
 
             <TouchableOpacity 
               style={styles.registerButton}
@@ -192,6 +205,30 @@ const styles = StyleSheet.create({
   },
   registerButtonText: {
     color: '#4CAF50',
+    fontSize: normalize(16),
+    fontWeight: '500',
+  },
+  googleButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: normalize(10),
+    padding: normalize(15),
+    marginBottom: normalize(15),
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 1.41,
+  },
+  googleIcon: {
+    width: normalize(24),
+    height: normalize(24),
+    marginRight: normalize(10),
+  },
+  googleButtonText: {
+    color: '#333333',
     fontSize: normalize(16),
     fontWeight: '500',
   },
