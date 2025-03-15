@@ -4,12 +4,12 @@ import { Platform } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 
 import { HapticTab } from '@/components/HapticTab';
-import TabBarBackground from '@/components/ui/TabBarBackground';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
+  const backgroundColor = Colors[colorScheme ?? 'light'].background;
 
   return (
     <Tabs
@@ -17,39 +17,71 @@ export default function TabLayout() {
         tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
         headerShown: false,
         tabBarButton: HapticTab,
-        tabBarBackground: TabBarBackground,
         tabBarShowLabel: false,
-        tabBarStyle: Platform.select({
-          ios: {
-            backgroundColor: 'transparent',
-          },
-          default: {
-            backgroundColor: Colors[colorScheme ?? 'light'].background,
-          },
-        }),
+        tabBarStyle: {
+          backgroundColor,
+          height: 60,
+          paddingBottom: 10,
+          elevation: 0,
+          borderTopWidth: 0,
+          shadowOpacity: 0,
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          zIndex: 1,
+        },
+        headerStyle: {
+          display: 'none',
+        },
       }}>
       <Tabs.Screen
         name="index"
         options={{
           tabBarIcon: ({ color }) => <MaterialIcons name="home" size={28} color={color} />,
+          headerShown: false,
+        }}
+      />
+      <Tabs.Screen
+        name="disease-detection"
+        options={{
+          tabBarIcon: ({ color }) => <MaterialIcons name="local-hospital" size={28} color={color} />,
+          headerShown: false,
+        }}
+      />
+      <Tabs.Screen
+        name="weed-detection"
+        options={{
+          tabBarIcon: ({ color }) => <MaterialIcons name="eco" size={28} color={color} />,
+          headerShown: false,
         }}
       />
       <Tabs.Screen
         name="pest-detection"
         options={{
           tabBarIcon: ({ color }) => <MaterialIcons name="bug-report" size={28} color={color} />,
+          headerShown: false,
+        }}
+      />
+      <Tabs.Screen
+        name="rice-quality"
+        options={{
+          tabBarIcon: ({ color }) => <MaterialIcons name="grain" size={28} color={color} />,
+          headerShown: false,
         }}
       />
       <Tabs.Screen
         name="explore"
         options={{
           tabBarIcon: ({ color }) => <MaterialIcons name="explore" size={28} color={color} />,
+          headerShown: false,
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
           tabBarIcon: ({ color }) => <MaterialIcons name="person" size={28} color={color} />,
+          headerShown: false,
         }}
       />
     </Tabs>

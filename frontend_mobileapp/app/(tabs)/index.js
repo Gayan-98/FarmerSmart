@@ -173,7 +173,7 @@ export default function HomeScreen() {
             icon="water-drop"
             label="Irrigation"
             color="#2196F3"
-            onPress={() => {}}
+            onPress={() => router.push('/(tabs)/rice-quality')}
           />
           <QuickActionButton
             icon="analytics"
@@ -185,19 +185,25 @@ export default function HomeScreen() {
             icon="notifications"
             label="Alerts"
             color="#FF9800"
-            onPress={() => {}}
+            onPress={() => router.push('/(main)/notifications')}
           />
           <QuickActionButton
             icon="eco"
-            label="Crops"
+            label="Weed Seeds"
             color="#00BFA5"
-            onPress={() => {}}
+            onPress={() => router.push('/(tabs)/weed-detection')}
           />
           <QuickActionButton
             icon="wb-cloudy"
             label="Weather"
             color="#F44336"
-            onPress={() => {}}
+            onPress={() => router.push('/(main)/weather-details')}
+          />
+          <QuickActionButton
+            icon="local-hospital"
+            label="Disease Check"
+            color="#9C27B0"
+            onPress={() => router.push('/(tabs)/disease-detection')}
           />
         </View>
       </View>
