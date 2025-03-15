@@ -22,11 +22,9 @@ public class AuthController {
 
   @PostMapping("/login")
   public AuthResponse login(@RequestBody LoginRequest request) {
-    boolean authenticated = userService.authenticateUser(request);
-    if (authenticated) {
-      return new AuthResponse();
-    } else {
-      throw new RuntimeException("Invalid credentials");
-    }
+    User user = userService.authenticateUser(request);
+    AuthResponse response = new AuthResponse();
+    response.setMessage("Login successful");
+    return response;
   }
 }

@@ -10,6 +10,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import com.research.farmer_smart.exception.InvalidCredentialsException;
 
 @Service
 @AllArgsConstructor
@@ -35,13 +36,18 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public boolean authenticateUser(LoginRequest request) {
+  public User authenticateUser(LoginRequest request) {
     Optional<User> userOptional = userRepository.findByEmail(request.getEmail());
-
-    if (userOptional.isPresent()) {
-      User user = userOptional.get();
-      return passwordEncoder.matches(request.getPassword(), user.getPassword());
+    
+    if (userOptional.isEmpty()) {
+      throw new InvalidCredentialsException("Invalid email address");
     }
-    return false;
+
+    User user = userOptional.get();
+    if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+      throw new InvalidCredentialsException("Invalid password");
+    }
+
+    return user;
   }
 }

@@ -1,4 +1,4 @@
-import { View, StyleSheet, TouchableOpacity, TextInput, Dimensions, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, TextInput, Dimensions, KeyboardAvoidingView, Platform, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ThemedText } from '@/components/ThemedText';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
@@ -18,9 +18,28 @@ export default function RegisterScreen() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleRegister = () => {
-    signUp(email, password, name);
+  const handleRegister = async () => {
+    if (!name || !email || !password || !confirmPassword) {
+      Alert.alert('Error', 'Please fill in all fields');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      Alert.alert('Error', 'Passwords do not match');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await signUp(email, password, name);
+    } catch (error) {
+      console.error('Registration error:', error);
+      // Error is already handled in AuthContext
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -101,8 +120,17 @@ export default function RegisterScreen() {
               />
             </View>
 
-            <TouchableOpacity style={styles.registerButton} onPress={handleRegister}>
-              <ThemedText style={styles.registerButtonText}>Sign Up</ThemedText>
+            <TouchableOpacity 
+              style={[
+                styles.registerButton,
+                loading && styles.registerButtonDisabled
+              ]}
+              onPress={handleRegister}
+              disabled={loading}
+            >
+              <ThemedText style={styles.registerButtonText}>
+                {loading ? 'Creating Account...' : 'Sign Up'}
+              </ThemedText>
             </TouchableOpacity>
 
             <View style={styles.loginPrompt}>
@@ -200,5 +228,9 @@ const styles = StyleSheet.create({
     color: '#4CAF50',
     fontSize: normalize(14),
     fontWeight: '500',
+  },
+  registerButtonDisabled: {
+    backgroundColor: '#ccc',
+    opacity: 0.7,
   },
 }); 

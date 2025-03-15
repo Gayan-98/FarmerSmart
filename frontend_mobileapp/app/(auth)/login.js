@@ -1,4 +1,4 @@
-import { View, StyleSheet, TouchableOpacity, TextInput, Dimensions, KeyboardAvoidingView, Platform, Image } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, TextInput, Dimensions, KeyboardAvoidingView, Platform, Image, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ThemedText } from '@/components/ThemedText';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
@@ -17,8 +17,18 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleLogin = () => {
-    signIn(email, password);
+  const handleLogin = async () => {
+    if (!email || !password) {
+      Alert.alert('Error', 'Please fill in all fields');
+      return;
+    }
+
+    try {
+      await signIn(email, password);
+    } catch (error) {
+      console.error('Login error:', error);
+      // Error is already handled in AuthContext
+    }
   };
 
   return (
