@@ -6,7 +6,7 @@ import cv2
 from tensorflow.keras.preprocessing import image
 
 # Load the model
-model = load_model('model.keras')
+model = load_model('./models/disease_model.keras')
 
 # Initialize Flask app
 app = Flask(__name__)
