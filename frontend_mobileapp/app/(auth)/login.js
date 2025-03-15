@@ -5,6 +5,7 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { useState } from 'react';
 import { router } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
+import { showNotification } from '@/components/CustomAlert';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const scale = SCREEN_WIDTH / 375;
@@ -16,18 +17,27 @@ export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert('Error', 'Please fill in all fields');
+      showNotification('error', 'Please fill in all fields');
       return;
     }
 
+    if (!email.includes('@')) {
+      showNotification('error', 'Please enter a valid email address');
+      return;
+    }
+
+    setLoading(true);
     try {
       await signIn(email, password);
     } catch (error) {
       console.error('Login error:', error);
-      // Error is already handled in AuthContext
+      showNotification('error', 'Login failed. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -84,8 +94,14 @@ export default function LoginScreen() {
               <ThemedText style={styles.forgotPasswordText}>Forgot Password?</ThemedText>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-              <ThemedText style={styles.loginButtonText}>Login</ThemedText>
+            <TouchableOpacity 
+              style={[styles.loginButton, loading && styles.loginButtonDisabled]} 
+              onPress={handleLogin}
+              disabled={loading}
+            >
+              <ThemedText style={styles.loginButtonText}>
+                {loading ? 'Logging in...' : 'Login'}
+              </ThemedText>
             </TouchableOpacity>
 
             <View style={styles.divider}>
@@ -241,5 +257,8 @@ const styles = StyleSheet.create({
     color: '#333333',
     fontSize: normalize(16),
     fontWeight: '500',
+  },
+  loginButtonDisabled: {
+    backgroundColor: '#E0E0E0',
   },
 }); 

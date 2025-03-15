@@ -3,6 +3,7 @@ import { router } from 'expo-router';
 import { auth, provider } from '@/config/firebase';
 import { signInWithPopup, onAuthStateChanged, signOut as firebaseSignOut } from 'firebase/auth';
 import { Alert } from 'react-native';
+import { showNotification } from '@/components/CustomAlert';
 
 const AuthContext = createContext({});
 
@@ -26,44 +27,40 @@ export function AuthProvider({ children }) {
       console.log('Login response:', data);
 
       if (!response.ok) {
-        Alert.alert(
-          'Login Failed',
-          data.message || 'Invalid credentials. Please try again.',
-          [{ text: 'OK' }]
-        );
+        showNotification('error', data.message || 'Invalid credentials');
         return;
       }
 
-      setUser(data);
-      router.replace('/(tabs)');
+      // Store complete user data
+      const userData = {
+        ...data,
+        username: data.username,
+        email: data.email,
+        role: data.role,
+        firstName: data.firstName,
+        lastName: data.lastName
+      };
+
+      showNotification('success', 'Welcome back! Login successful.');
+      setTimeout(() => {
+        setUser(userData);  // Store complete user data
+        router.replace('/(tabs)');
+      }, 1500);
+
     } catch (error) {
       console.error('Login Error:', error);
-      Alert.alert(
-        'Connection Error',
-        'Unable to connect to server. Please check your internet connection.',
-        [{ text: 'OK' }]
-      );
+      showNotification('error', 'Unable to connect to server');
     }
   };
 
-  const signUp = async (email, password, name) => {
+  const signUp = async (registrationData) => {
     try {
       const response = await fetch('http://localhost:8083/auth/signup', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type'
         },
-        credentials: 'include',
-        body: JSON.stringify({
-          username: name,
-          email: email,
-          password: password,
-          role: 'FARMER'
-        }),
+        body: JSON.stringify(registrationData),
       });
 
       const data = await response.json();
@@ -73,14 +70,7 @@ export function AuthProvider({ children }) {
       }
 
       console.log('Registration response:', data);
-      
-      setUser({
-        id: data.id,
-        username: data.username,
-        email: data.email,
-        role: data.role
-      });
-      
+      setUser(data);
       Alert.alert('Success', 'Registration successful!');
       router.replace('/(tabs)');
     } catch (error) {
