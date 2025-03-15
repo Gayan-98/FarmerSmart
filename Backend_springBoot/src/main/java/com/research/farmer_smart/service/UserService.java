@@ -7,5 +7,5 @@ import com.research.farmer_smart.model.User;
 public interface UserService {
   User registerUser(SignUpRequest request);
 
-  boolean authenticateUser(LoginRequest request);
+  User authenticateUser(LoginRequest request);
 }

@@ -3,6 +3,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { ThemedText } from '@/components/ThemedText';
 import { useColorScheme } from '@/hooks/useColorScheme';
+import { useAuth } from '@/context/AuthContext';
+import { showNotification } from '@/components/CustomAlert';
 
 const { width } = Dimensions.get('window');
 
@@ -38,29 +40,53 @@ const ActionButton = ({ icon, title, onPress }) => {
 };
 
 export default function ProfileScreen() {
+  const { user, signOut } = useAuth();
   const colorScheme = useColorScheme();
   const backgroundColor = colorScheme === 'dark' ? '#151718' : '#F5F5F5';
 
+  const handleLogout = async () => {
+    try {
+      showNotification('success', 'Logging out...');
+      await signOut();
+    } catch (error) {
+      console.error('Logout error:', error);
+      showNotification('error', 'Failed to logout');
+    }
+  };
+
   return (
     <ScrollView style={[styles.container, { backgroundColor }]}>
-      <LinearGradient
-        colors={['#4CAF50', '#2E7D32']}
-        style={styles.header}
-      >
-        <View style={styles.headerContent}>
-          <Image
-            source={require('@/assets/images/download.jpeg')}
-            style={styles.profileImage}
-          />
-          <View style={styles.profileInfo}>
-            <ThemedText style={styles.name}>John's Farm</ThemedText>
-            <View style={styles.locationContainer}>
-              <MaterialIcons name="location-on" size={16} color="#FFFFFF" />
-              <ThemedText style={styles.location}>California, USA</ThemedText>
+      <View style={styles.headerContainer}>
+        <LinearGradient
+          colors={['#4CAF50', '#2E7D32']}
+          style={styles.header}
+        >
+          <View style={styles.headerTop}>
+            <ThemedText style={styles.headerTitle}>Profile</ThemedText>
+            <TouchableOpacity 
+              style={styles.logoutButton}
+              onPress={handleLogout}
+            >
+              <MaterialIcons name="logout" size={24} color="#FFFFFF" />
+              <ThemedText style={styles.logoutText}>Logout</ThemedText>
+            </TouchableOpacity>
+          </View>
+          
+          <View style={styles.headerContent}>
+            <Image
+              source={require('@/assets/images/download.jpeg')}
+              style={styles.profileImage}
+            />
+            <View style={styles.profileInfo}>
+              <ThemedText style={styles.name}>{user?.firstName || "John's Farm"}</ThemedText>
+              <View style={styles.locationContainer}>
+                <MaterialIcons name="location-on" size={16} color="#FFFFFF" />
+                <ThemedText style={styles.location}>California, USA</ThemedText>
+              </View>
             </View>
           </View>
-        </View>
-      </LinearGradient>
+        </LinearGradient>
+      </View>
 
       <View style={styles.statsContainer}>
         <View style={styles.statCard}>
@@ -107,31 +133,55 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  headerContainer: {
+    width: '100%',
+  },
   header: {
-    paddingTop: 60,
-    paddingBottom: 30,
+    padding: 20,
+    paddingTop: 50,
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
+  },
+  headerTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  headerTitle: {
+    color: '#FFFFFF',
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  logoutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    padding: 8,
+    borderRadius: 20,
+  },
+  logoutText: {
+    color: '#FFFFFF',
+    marginLeft: 5,
+    fontSize: 16,
   },
   headerContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 20,
   },
   profileImage: {
     width: 80,
     height: 80,
     borderRadius: 40,
-    borderWidth: 3,
-    borderColor: '#FFFFFF',
+    marginRight: 15,
   },
   profileInfo: {
-    marginLeft: 20,
+    flex: 1,
   },
   name: {
-    fontSize: 24,
-    fontWeight: 'bold',
     color: '#FFFFFF',
+    fontSize: 20,
+    fontWeight: 'bold',
   },
   locationContainer: {
     flexDirection: 'row',
@@ -139,9 +189,9 @@ const styles = StyleSheet.create({
     marginTop: 5,
   },
   location: {
-    fontSize: 14,
     color: '#FFFFFF',
-    marginLeft: 4,
+    marginLeft: 5,
+    opacity: 0.9,
   },
   statsContainer: {
     flexDirection: 'row',
