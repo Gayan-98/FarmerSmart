@@ -19,6 +19,7 @@ public class SecurityConfig {
         .csrf(AbstractHttpConfigurer::disable)
         .authorizeHttpRequests(auth -> auth
             .requestMatchers("/auth/signup", "/auth/login").permitAll()
+            .requestMatchers("/api/pest-infestations/**").permitAll()
             .anyRequest().authenticated()
         )
         .sessionManagement(session -> session.sessionCreationPolicy(STATELESS));
