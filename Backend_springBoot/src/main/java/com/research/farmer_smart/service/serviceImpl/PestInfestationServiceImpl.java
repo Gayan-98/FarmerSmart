@@ -7,10 +7,12 @@ import com.research.farmer_smart.model.Farmer;
 import com.research.farmer_smart.model.PestInfestation;
 import com.research.farmer_smart.repository.FarmerRepository;
 import com.research.farmer_smart.repository.PestInfestationRepository;
+import com.research.farmer_smart.service.NotificationService;
 import com.research.farmer_smart.service.PestInfestationService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -19,6 +21,9 @@ public class PestInfestationServiceImpl implements PestInfestationService {
 
     private final PestInfestationRepository pestInfestationRepository;
     private final FarmerRepository farmerRepository;
+    private final NotificationService notificationService;
+    
+    private static final int ALERT_THRESHOLD = 3; // Number of infestations that trigger an alert
 
     @Override
     public PestInfestation recordPestInfestation(PestInfestationRequest request) {
@@ -32,9 +37,30 @@ public class PestInfestationServiceImpl implements PestInfestationService {
             pestInfestation.setDetectedLocation(request.getDetectedLocation());
             pestInfestation.setDetectionDateTime(request.getDetectionDateTime());
 
-            return pestInfestationRepository.save(pestInfestation);
+            PestInfestation savedInfestation = pestInfestationRepository.save(pestInfestation);
+
+            // Check for multiple infestations in the area
+            checkAndNotifyAreaInfestation(request.getDetectedLocation(), request.getPestName());
+
+            return savedInfestation;
         } catch (Exception e) {
             throw new PestInfestationException("Error recording pest infestation: " + e.getMessage());
+        }
+    }
+
+    private void checkAndNotifyAreaInfestation(String location, String pestName) {
+        // Count recent infestations in the area (last 7 days)
+        LocalDateTime oneWeekAgo = LocalDateTime.now().minusDays(7);
+        List<PestInfestation> recentInfestations = pestInfestationRepository
+            .findByDetectedLocationAndPestNameAndDetectionDateTimeAfter(
+                location, pestName, oneWeekAgo);
+
+        if (recentInfestations.size() >= ALERT_THRESHOLD) {
+            notificationService.notifyFarmersInArea(
+                location, 
+                pestName, 
+                recentInfestations.size()
+            );
         }
     }
 
@@ -54,5 +80,14 @@ public class PestInfestationServiceImpl implements PestInfestationService {
     public PestInfestation getPestInfestationById(String id) {
         return pestInfestationRepository.findById(id)
                 .orElseThrow(() -> new PestInfestationException("Pest infestation record not found"));
+    }
+
+    @Override
+    public List<PestInfestation> searchByLocation(String location) {
+        LocalDateTime oneWeekAgo = LocalDateTime.now().minusDays(7);
+        return pestInfestationRepository.findByDetectedLocationContainingIgnoreCaseAndDetectionDateTimeAfter(
+            location, 
+            oneWeekAgo
+        );
     }
 } 

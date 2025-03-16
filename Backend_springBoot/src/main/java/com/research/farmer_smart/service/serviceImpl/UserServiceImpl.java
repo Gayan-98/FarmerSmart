@@ -54,9 +54,12 @@ public class UserServiceImpl implements UserService {
       Expert expert = new Expert();
       expert.setFirstName(request.getFirstName());
       expert.setLastName(request.getLastName());
+      expert.setEmail(request.getEmail());
       expert.setContactNumber(request.getContactNumber());
       expert.setAssignedArea(request.getAssignedArea());
       expert.setDesignation(request.getDesignation());
+      expert.setSpecialization(request.getSpecialization());
+      expert.setQualifications(request.getQualifications());
       expert.setRegistrationDate(request.getRegistrationDate());
 
       Expert savedExpert = expertRepository.save(expert);
@@ -80,5 +83,11 @@ public class UserServiceImpl implements UserService {
     }
 
     return user;
+  }
+
+  @Override
+  public User getUserById(String userId) {
+    return userRepository.findById(userId)
+        .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
   }
 }

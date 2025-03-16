@@ -51,6 +51,7 @@ export default function PestDetectionScreen() {
   const [locationName, setLocationName] = useState(null);
   const [locationData, setLocationData] = useState(null);
   const [pestSolution, setPestSolution] = useState(null);
+  const [pestAlerts, setPestAlerts] = useState(null);
 
   useEffect(() => {
     (async () => {
@@ -101,6 +102,47 @@ export default function PestDetectionScreen() {
       }
     })();
   }, []);
+
+  useEffect(() => {
+    const fetchPestAlerts = async () => {
+      if (!locationData?.address?.city) return;
+
+      try {
+        const response = await fetch(
+          `http://localhost:8083/api/pest-alerts/area/${locationData.address.city}`
+        );
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch pest alerts');
+        }
+
+        const alertData = await response.json();
+        setPestAlerts(alertData);
+
+        // Create notification if alert level is HIGH
+        if (alertData.alertLevel === 'HIGH') {
+          const topThreat = alertData.topThreats[0];
+          const notification = {
+            type: 'alert',
+            title: `Pest Alert - ${alertData.location}`,
+            message: `High alert: ${topThreat.pestName} detected in your area (${topThreat.percentage}% of cases)`,
+            time: new Date().toLocaleString(),
+            read: false
+          };
+
+          addNotification(notification);
+        }
+      } catch (error) {
+        console.error('Error fetching pest alerts:', error);
+      }
+    };
+
+    fetchPestAlerts();
+  }, [locationData]);
+
+  const addNotification = (notification) => {
+    showNotification('alert', notification.message);
+  };
 
   const savePestDetection = async (predictionData) => {
     try {
@@ -160,7 +202,6 @@ export default function PestDetectionScreen() {
         throw new Error('Failed to save to backend');
       }
 
-      // After successful backend save, fetch pest solution
       const pestName = predictionData.predicted_class || 'Unknown Pest';
       const solutionResponse = await fetch(`http://localhost:8083/api/pest-solutions/pest/${pestName}`);
       

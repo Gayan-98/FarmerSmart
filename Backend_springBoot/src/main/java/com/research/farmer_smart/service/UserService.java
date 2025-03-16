@@ -8,4 +8,6 @@ public interface UserService {
   User registerUser(SignUpRequest request);
 
   User authenticateUser(LoginRequest request);
+
+  User getUserById(String userId);
 }
