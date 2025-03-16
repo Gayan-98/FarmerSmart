@@ -50,6 +50,7 @@ export default function PestDetectionScreen() {
   const [location, setLocation] = useState(null);
   const [locationName, setLocationName] = useState(null);
   const [locationData, setLocationData] = useState(null);
+  const [pestSolution, setPestSolution] = useState(null);
 
   useEffect(() => {
     (async () => {
@@ -157,6 +158,15 @@ export default function PestDetectionScreen() {
 
       if (!backendResponse.ok) {
         throw new Error('Failed to save to backend');
+      }
+
+      // After successful backend save, fetch pest solution
+      const pestName = predictionData.predicted_class || 'Unknown Pest';
+      const solutionResponse = await fetch(`http://localhost:8083/api/pest-solutions/pest/${pestName}`);
+      
+      if (solutionResponse.ok) {
+        const solutionData = await solutionResponse.json();
+        setPestSolution(solutionData[0]); // Get the first solution
       }
 
       showNotification('success', 'Detection results saved successfully');
@@ -285,6 +295,30 @@ export default function PestDetectionScreen() {
                   <ThemedText style={styles.predictionDescription}>
                     Analysis completed successfully
                   </ThemedText>
+
+                  {pestSolution && (
+                    <View style={styles.solutionContainer}>
+                      <ThemedText style={styles.solutionTitle}>Recommended Solution</ThemedText>
+                      <ThemedText style={styles.solutionDescription}>
+                        {pestSolution.solutionDescription}
+                      </ThemedText>
+                      <View style={styles.expertInfo}>
+                        <MaterialIcons name="person" size={20} color="#4CAF50" />
+                        <ThemedText style={styles.expertName}>
+                          Expert: {pestSolution.expert.firstName} {pestSolution.expert.lastName}
+                        </ThemedText>
+                        <ThemedText style={styles.expertDesignation}>
+                          {pestSolution.expert.designation}
+                        </ThemedText>
+                        <TouchableOpacity style={styles.contactButton}>
+                          <MaterialIcons name="phone" size={16} color="#FFFFFF" />
+                          <ThemedText style={styles.contactButtonText}>
+                            {pestSolution.expert.contactNumber}
+                          </ThemedText>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  )}
                 </View>
               )}
             </View>
@@ -536,5 +570,60 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  solutionContainer: {
+    marginTop: 20,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 15,
+    width: '100%',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 1.41,
+  },
+  solutionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#4CAF50',
+    marginBottom: 10,
+  },
+  solutionDescription: {
+    fontSize: 14,
+    color: '#333333',
+    lineHeight: 20,
+  },
+  expertInfo: {
+    marginTop: 15,
+    padding: 10,
+    backgroundColor: '#F5F5F5',
+    borderRadius: 8,
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+  },
+  expertName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333333',
+    marginLeft: 5,
+  },
+  expertDesignation: {
+    fontSize: 14,
+    color: '#666666',
+    marginLeft: 25,
+  },
+  contactButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#4CAF50',
+    padding: 8,
+    borderRadius: 20,
+    marginTop: 10,
+  },
+  contactButtonText: {
+    color: '#FFFFFF',
+    marginLeft: 5,
+    fontSize: 14,
   },
 }); 
