@@ -6,16 +6,15 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.validation.FieldError;
+import java.util.HashMap;
+import java.util.Map;
 
-@ControllerAdvice
+@RestControllerAdvice
 public class GlobalExceptionHandler {
 
-  @ExceptionHandler(InvalidCredentialsException.class)
-  public ResponseEntity<ErrorResponse> handleInvalidCredentialsException(
-      InvalidCredentialsException ex) {
-    return new ResponseEntity<>(new ErrorResponse(ex.getMessage()), HttpStatus.UNAUTHORIZED);
-  }
-  
     @ExceptionHandler(InvalidCredentialsException.class)
     public ResponseEntity<LoginResponse> handleInvalidCredentialsException(InvalidCredentialsException ex) {
         LoginResponse response = LoginResponse.builder()
@@ -24,26 +23,27 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
     }
 
-  @ExceptionHandler(PestInfestationException.class)
-  public ResponseEntity<ErrorResponse> handlePestInfestationException(PestInfestationException ex) {
-    return new ResponseEntity<>(new ErrorResponse(ex.getMessage()), HttpStatus.BAD_REQUEST);
-  }
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorResponse> handleValidationExceptions(MethodArgumentNotValidException ex) {
+        Map<String, String> errors = new HashMap<>();
+        ex.getBindingResult().getAllErrors().forEach((error) -> {
+            String fieldName = ((FieldError) error).getField();
+            String errorMessage = error.getDefaultMessage();
+            errors.put(fieldName, errorMessage);
+        });
+        ErrorResponse response = new ErrorResponse("Validation failed: " + errors);
+        return ResponseEntity.badRequest().body(response);
+    }
 
-  @ExceptionHandler(RuntimeException.class)
-  public ResponseEntity<ErrorResponse> handleRuntimeException(RuntimeException ex) {
-    return new ResponseEntity<>(new ErrorResponse(ex.getMessage()),
-        HttpStatus.INTERNAL_SERVER_ERROR);
-  }
+    @ExceptionHandler(PestInfestationException.class)
+    public ResponseEntity<ErrorResponse> handlePestInfestationException(PestInfestationException e) {
+        ErrorResponse error = new ErrorResponse(e.getMessage());
+        return ResponseEntity.badRequest().body(error);
+    }
 
-  @ExceptionHandler(FarmerNotFoundException.class)
-  public ResponseEntity<ErrorResponse> handleFarmerNotFoundException(RuntimeException ex) {
-    return new ResponseEntity<>(new ErrorResponse(ex.getMessage()),
-        HttpStatus.INTERNAL_SERVER_ERROR);
-  }
-
-  @ExceptionHandler(DiseasesDetectionException.class)
-  public ResponseEntity<ErrorResponse> handleDiseasesDetectionException(RuntimeException ex) {
-    return new ResponseEntity<>(new ErrorResponse(ex.getMessage()),
-        HttpStatus.INTERNAL_SERVER_ERROR);
-  }
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleGenericException(Exception e) {
+        ErrorResponse error = new ErrorResponse("An unexpected error occurred: " + e.getMessage());
+        return ResponseEntity.internalServerError().body(error);
+    }
 } 
