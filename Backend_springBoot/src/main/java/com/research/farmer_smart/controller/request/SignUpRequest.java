@@ -24,4 +24,6 @@ public class SignUpRequest {
   // Expert-specific fields
   private String assignedArea;
   private String designation;
+  private String specialization;
+  private String qualifications;
 }

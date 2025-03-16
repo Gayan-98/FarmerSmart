@@ -24,6 +24,9 @@ public class SecurityConfig {
             .requestMatchers("/api/pest-solutions/**").permitAll()
             .requestMatchers("/rice-quality/**").permitAll()
             .requestMatchers("/disease-solutions/**").permitAll()
+                .requestMatchers("/api/pest-alerts/**").permitAll()
+                .requestMatchers("/api/farmers/**").permitAll()
+                .requestMatchers("auth/user/**").permitAll()                 
             .anyRequest().authenticated()
         )
         .sessionManagement(session -> session.sessionCreationPolicy(STATELESS));
