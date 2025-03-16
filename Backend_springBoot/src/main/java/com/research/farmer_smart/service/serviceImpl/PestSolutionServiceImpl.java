@@ -1,6 +1,7 @@
 package com.research.farmer_smart.service.serviceImpl;
 
 import com.research.farmer_smart.controller.request.PestSolutionRequest;
+import com.research.farmer_smart.exception.ExpertNotFoundException;
 import com.research.farmer_smart.exception.PestInfestationException;
 import com.research.farmer_smart.model.Expert;
 import com.research.farmer_smart.model.PestInfestation;
@@ -14,10 +15,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -53,7 +52,7 @@ public class PestSolutionServiceImpl implements PestSolutionService {
         Expert expert = expertRepository.findById(request.getExpertId())
                 .orElseThrow(() -> {
                     logger.error("Expert not found with ID: {}", request.getExpertId());
-                    return new PestInfestationException("Expert not found with ID: " + request.getExpertId());
+                    return new ExpertNotFoundException("Expert not found with ID: " + request.getExpertId());
                 });
         logger.info("Found expert: {}", expert.getId());
 
