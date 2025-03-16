@@ -6,11 +6,12 @@ import { IconSymbol } from '@/components/ui/IconSymbol';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { StatusBar } from 'expo-status-bar';
 import * as ImagePicker from 'expo-image-picker';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { collection, addDoc } from 'firebase/firestore';
-import { db, auth } from '@/config/firebase';
+import { db } from '@/config/firebase';
 import { useAuth } from '@/context/AuthContext';
 import { showNotification } from '@/components/CustomAlert';
+import * as Location from 'expo-location';
 
 const { width } = Dimensions.get('window');
 
@@ -46,27 +47,107 @@ export default function PestDetectionScreen() {
   const [selectedImage, setSelectedImage] = useState(null);
   const [prediction, setPrediction] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [location, setLocation] = useState(null);
+  const [locationName, setLocationName] = useState(null);
+  const [locationData, setLocationData] = useState(null);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        let { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') {
+          showNotification('error', 'Permission to access location was denied');
+          return;
+        }
+
+        const location = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Balanced
+        });
+        setLocation(location);
+
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?lat=${location.coords.latitude}&lon=${location.coords.longitude}&format=json`
+        );
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch location name');
+        }
+
+        const data = await response.json();
+        setLocationData(data);
+
+        const addressComponents = [];
+        if (data.address) {
+          const { quarter, suburb, city, state_district, state } = data.address;
+          if (quarter) addressComponents.push(quarter);
+          if (suburb) addressComponents.push(suburb);
+          if (city) addressComponents.push(city);
+          if (state_district) addressComponents.push(state_district);
+          if (state) addressComponents.push(state);
+        }
+
+        const fullAddress = addressComponents.length > 0 
+          ? addressComponents.join(', ')
+          : data.display_name;
+
+        setLocationName(fullAddress);
+
+      } catch (error) {
+        console.error('Location error:', error);
+        if (location) {
+          setLocationName(`${location.coords.latitude.toFixed(4)}, ${location.coords.longitude.toFixed(4)}`);
+        }
+      }
+    })();
+  }, []);
 
   const savePestDetection = async (predictionData) => {
     try {
-   
       if (!user?.id) {
         console.log('Current user data:', user); 
         showNotification('error', 'User not properly authenticated');
         return;
       }
 
-    
+      const pestDetectionRef = collection(db, 'pestDetections');
+      const detectionData = {
+        userId: user.id,
+        username: user.username || 'unknown',
+        timestamp: new Date().toISOString(),
+        prediction: {
+          class: predictionData.predicted_class || 'Unknown',
+          confidence: parseFloat(predictionData.confidence) || 0
+        },
+        location: location ? {
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+          fullAddress: locationName,
+          addressDetails: locationData?.address ? {
+            quarter: locationData.address.quarter || '',
+            suburb: locationData.address.suburb || '',
+            city: locationData.address.city || '',
+            district: locationData.address.state_district || '',
+            province: locationData.address.state || ''
+          } : null
+        } : null,
+        createdAt: new Date().getTime()
+      };
+
+      await addDoc(pestDetectionRef, detectionData);
+
+      // Save to backend
       const backendData = {
-        farmerId: user.id, 
+        farmerId: user.id,
         pestName: predictionData.predicted_class || 'Unknown Pest',
-        detectedLocation: user?.landLocation || 'Unknown Location',
+        detectedLocation: locationName || user?.landLocation || 'Unknown Location',
+        coordinates: location ? {
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude
+        } : null,
         detectionDateTime: new Date().toISOString()
       };
 
-      console.log('Sending data to backend:', backendData); 
-
-      const response = await fetch('http://localhost:8083/api/pest-infestations', {
+      const backendResponse = await fetch('http://localhost:8083/api/pest-infestations', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -74,9 +155,8 @@ export default function PestDetectionScreen() {
         body: JSON.stringify(backendData)
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to save to backend');
+      if (!backendResponse.ok) {
+        throw new Error('Failed to save to backend');
       }
 
       showNotification('success', 'Detection results saved successfully');
