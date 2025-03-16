@@ -1,6 +1,7 @@
 package com.research.farmer_smart.service.serviceImpl;
 
 import com.research.farmer_smart.controller.request.PestInfestationRequest;
+import com.research.farmer_smart.exception.FarmerNotFoundException;
 import com.research.farmer_smart.exception.PestInfestationException;
 import com.research.farmer_smart.model.Farmer;
 import com.research.farmer_smart.model.PestInfestation;
@@ -23,7 +24,7 @@ public class PestInfestationServiceImpl implements PestInfestationService {
     public PestInfestation recordPestInfestation(PestInfestationRequest request) {
         try {
             Farmer farmer = farmerRepository.findById(request.getFarmerId())
-                    .orElseThrow(() -> new PestInfestationException("Farmer not found with ID: " + request.getFarmerId()));
+                    .orElseThrow(() -> new FarmerNotFoundException("Farmer not found with ID: " + request.getFarmerId()));
 
             PestInfestation pestInfestation = new PestInfestation();
             pestInfestation.setFarmer(farmer);
@@ -40,7 +41,7 @@ public class PestInfestationServiceImpl implements PestInfestationService {
     @Override
     public List<PestInfestation> getFarmerPestInfestations(String farmerId) {
         Farmer farmer = farmerRepository.findById(farmerId)
-                .orElseThrow(() -> new PestInfestationException("Farmer not found"));
+                .orElseThrow(() -> new FarmerNotFoundException("Farmer not found"));
         return pestInfestationRepository.findByFarmer(farmer);
     }
 
