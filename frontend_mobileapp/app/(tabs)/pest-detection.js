@@ -10,6 +10,7 @@ import { useState } from 'react';
 import { collection, addDoc } from 'firebase/firestore';
 import { db, auth } from '@/config/firebase';
 import { useAuth } from '@/context/AuthContext';
+import { showNotification } from '@/components/CustomAlert';
 
 const { width } = Dimensions.get('window');
 
@@ -48,29 +49,40 @@ export default function PestDetectionScreen() {
 
   const savePestDetection = async (predictionData) => {
     try {
-      const pestDetectionRef = collection(db, 'pestDetections');
-      const detectionData = {
-        userId: 'user123',
-        timestamp: new Date().toISOString(),
-        prediction: {
-          class: predictionData.predicted_class || 'Unknown',
-          confidence: parseFloat(predictionData.confidence) || 0
-        },
-        imageUrl: selectedImage?.uri || null,
-        createdAt: new Date().getTime()
+   
+      if (!user?.id) {
+        console.log('Current user data:', user); 
+        showNotification('error', 'User not properly authenticated');
+        return;
+      }
+
+    
+      const backendData = {
+        farmerId: user.id, 
+        pestName: predictionData.predicted_class || 'Unknown Pest',
+        detectedLocation: user?.landLocation || 'Unknown Location',
+        detectionDateTime: new Date().toISOString()
       };
 
-      // Remove any undefined values
-      Object.keys(detectionData).forEach(key => 
-        detectionData[key] === undefined && delete detectionData[key]
-      );
+      console.log('Sending data to backend:', backendData); 
 
-      const docRef = await addDoc(pestDetectionRef, detectionData);
-      console.log('Detection saved with ID:', docRef.id);
-      Alert.alert('Success', 'Detection results saved successfully');
+      const response = await fetch('http://localhost:8083/api/pest-infestations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(backendData)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to save to backend');
+      }
+
+      showNotification('success', 'Detection results saved successfully');
     } catch (error) {
-      console.error('Error saving to database:', error);
-      Alert.alert('Error', 'Failed to save detection results');
+      console.error('Error saving detection:', error);
+      showNotification('error', 'Failed to save detection results');
     }
   };
 
@@ -124,7 +136,6 @@ export default function PestDetectionScreen() {
       const data = await apiResponse.json();
       setPrediction(data);
       
-      // Save to Firebase with manual user ID
       await savePestDetection(data);
       
     } catch (error) {
@@ -237,7 +248,7 @@ export default function PestDetectionScreen() {
                 <ThemedText style={styles.seeAllText}>See All</ThemedText>
               </TouchableOpacity>
             </View>
-            {/* Add your recent detections list here */}
+      
           </View>
         </View>
       </ScrollView>
