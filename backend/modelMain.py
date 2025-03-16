@@ -7,6 +7,7 @@ import cv2
 import base64
 
 app = Flask(__name__)
+CORS(app) 
 
 # Load models into memory
 models = {
@@ -75,7 +76,8 @@ def predict():
 
     return jsonify({
         'prediction': predicted_label,
-        'message': 'Prediction successful'
+        'message': 'Prediction successful',
+         'success': True
     })
 
 if __name__ == '__main__':
