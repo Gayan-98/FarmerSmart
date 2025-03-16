@@ -22,10 +22,10 @@ public class SecurityConfig {
             .requestMatchers("/api/pest-infestations/**").permitAll()
             .requestMatchers("/diseases-detection/**").permitAll()
                 .requestMatchers("/api/pest-solutions/**").permitAll()
+            .requestMatchers("/rice-quality/**").permitAll()
                 .requestMatchers("/api/pest-alerts/**").permitAll()
                 .requestMatchers("/api/farmers/**").permitAll()
                 .requestMatchers("auth/user/**").permitAll()
-
             .anyRequest().authenticated()
         )
         .sessionManagement(session -> session.sessionCreationPolicy(STATELESS));
@@ -33,3 +33,4 @@ public class SecurityConfig {
     return http.build();
   }
 }
+
