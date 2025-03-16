@@ -1,10 +1,12 @@
 import os
+from flask_cors import CORS
 from flask import Flask, request, jsonify
 from tensorflow.keras.models import load_model
 import numpy as np
 import cv2
+import base64
 
-app = Flask(__name__) 
+app = Flask(__name__)
 
 # Load models into memory
 models = {
@@ -14,46 +16,67 @@ models = {
     # "rice_quality_detection": load_model('models/rice_quality_model.keras')
 }
 
-# Preprocessing function
-def preprocess_image(img_path):
-    img = cv2.imread(img_path)
-    img = cv2.resize(img, (128, 128))
-    img = img.astype('float32') / 255.0
-    img = img.reshape(1, 128, 128, 3)
-    return img
+# Preprocessing function for base64 image
+def preprocess_image_base64(base64_string):
+    try:
+        # Decode the base64 string
+        image_data = base64.b64decode(base64_string)
+        # Convert the binary data to a numpy array
+        nparr = np.frombuffer(image_data, np.uint8)
+        # Decode the image using OpenCV
+        img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        # Resize and normalize the image
+        img = cv2.resize(img, (128, 128))
+        img = img.astype('float32') / 255.0
+        img = img.reshape(1, 128, 128, 3)
+        return img
+    except Exception as e:
+        print("Error preprocessing image:", e)
+        return None
 
 @app.route('/predict', methods=['POST'])
 def predict():
-    if 'file' not in request.files or 'service' not in request.form:
-        return jsonify({'error': 'Missing file or service parameter'})
+    # Check if the request contains JSON data
+    if not request.is_json:
+        return jsonify({'error': 'Request must be JSON'}), 400
 
-    file = request.files['file']
-    service = request.form['service']
+    # Get the JSON data
+    data = request.get_json()
 
-    if file.filename == '' or service not in models:
-        return jsonify({'error': 'Invalid file or service name'})
+    # Check if the 'image' field is present
+    if 'image' not in data:
+        return jsonify({'error': 'No image provided'}), 400
 
-    # Save and preprocess the image
-    file_path = os.path.join('static', file.filename)
-    file.save(file_path)
-    img = preprocess_image(file_path)
+    # Get the base64-encoded image
+    base64_image = data['image']
+
+    # Preprocess the image
+    img = preprocess_image_base64(base64_image)
+    if img is None:
+        return jsonify({'error': 'Failed to process image'}), 400
 
     # Select the correct model and make prediction
-    model = models[service]
+    model = models["disease_detection"]  # Use the disease detection model
     prediction = model.predict(img)
     predicted_class = np.argmax(prediction, axis=1)[0]
 
-    # Define class labels for each model
-    class_labels = {
-        "disease_detection": ['Bacterial Blight', 'Blast', 'Brown Spot', 'Tungro'],
-        "pest_detection": ['Rice Bug', 'Stem Borer', 'Leaf Folder'],
-        "weed_seed_detection": ['Weed 1', 'Weed 2', 'Seed 1', 'Seed 2'],
-        "rice_quality_detection": ['Good Quality', 'Medium Quality', 'Poor Quality']
-    }
+    # Define class labels for the disease detection model
+    class_labels = ['Bacterial Blight', 'Blast', 'Brown Spot', 'Tungro']
 
-    predicted_label = class_labels[service][predicted_class]
+    # Ensure the predicted_class is within the valid range
+    if predicted_class < 0 or predicted_class >= len(class_labels):
+        return jsonify({
+            'error': 'Invalid prediction',
+            'predicted_class': predicted_class,
+            'class_labels': class_labels
+        }), 400
 
-    return jsonify({'prediction': predicted_label, 'service_used': service})
+    predicted_label = class_labels[predicted_class]
+
+    return jsonify({
+        'prediction': predicted_label,
+        'message': 'Prediction successful'
+    })
 
 if __name__ == '__main__':
     app.run(debug=True)
