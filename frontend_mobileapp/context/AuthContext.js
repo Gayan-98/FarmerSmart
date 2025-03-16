@@ -31,19 +31,21 @@ export function AuthProvider({ children }) {
         return;
       }
 
-      // Store complete user data
+      // Store complete user data with the correct ID field
       const userData = {
         ...data,
+        id: data.id,  // Changed from _id to id
         username: data.username,
         email: data.email,
         role: data.role,
         firstName: data.firstName,
-        lastName: data.lastName
+        lastName: data.lastName,
+        landLocation: data.landLocation
       };
 
       showNotification('success', 'Welcome back! Login successful.');
       setTimeout(() => {
-        setUser(userData);  // Store complete user data
+        setUser(userData);
         router.replace('/(tabs)');
       }, 1500);
 
