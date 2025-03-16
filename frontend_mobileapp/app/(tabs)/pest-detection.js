@@ -43,7 +43,7 @@ const TipCard = ({ icon, tip }) => (
 );
 
 export default function PestDetectionScreen() {
-  const { user } = useAuth();
+  const { user, userProfile } = useAuth();
   const [selectedImage, setSelectedImage] = useState(null);
   const [prediction, setPrediction] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -146,51 +146,22 @@ export default function PestDetectionScreen() {
 
   const savePestDetection = async (predictionData) => {
     try {
-      if (!user?.id) {
-        console.log('Current user data:', user); 
+      if (!userProfile?.farmerDetails?.id) {
+        console.log('Current user data:', userProfile);
         showNotification('error', 'User not properly authenticated');
         return;
       }
 
-      const pestDetectionRef = collection(db, 'pestDetections');
-      const detectionData = {
-        userId: user.id,
-        username: user.username || 'unknown',
-        timestamp: new Date().toISOString(),
-        prediction: {
-          class: predictionData.predicted_class || 'Unknown',
-          confidence: parseFloat(predictionData.confidence) || 0
-        },
-        location: location ? {
-          latitude: location.coords.latitude,
-          longitude: location.coords.longitude,
-          fullAddress: locationName,
-          addressDetails: locationData?.address ? {
-            quarter: locationData.address.quarter || '',
-            suburb: locationData.address.suburb || '',
-            city: locationData.address.city || '',
-            district: locationData.address.state_district || '',
-            province: locationData.address.state || ''
-          } : null
-        } : null,
-        createdAt: new Date().getTime()
-      };
-
-      await addDoc(pestDetectionRef, detectionData);
-
-      // Save to backend
       const backendData = {
-        farmerId: user.id,
-        pestName: predictionData.predicted_class || 'Unknown Pest',
-        detectedLocation: locationName || user?.landLocation || 'Unknown Location',
-        coordinates: location ? {
-          latitude: location.coords.latitude,
-          longitude: location.coords.longitude
-        } : null,
+        farmerId: userProfile.farmerDetails.id,
+        pestName: predictionData.predicted_class.toLowerCase() || 'unknown pest',
+        detectedLocation: locationName || userProfile.farmerDetails.landLocation || 'Unknown Location',
         detectionDateTime: new Date().toISOString()
       };
 
-      const backendResponse = await fetch('http://localhost:8083/api/pest-infestations', {
+      console.log('Sending pest detection data:', backendData);
+
+      const response = await fetch('http://localhost:8083/api/pest-infestations', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -198,22 +169,30 @@ export default function PestDetectionScreen() {
         body: JSON.stringify(backendData)
       });
 
-      if (!backendResponse.ok) {
-        throw new Error('Failed to save to backend');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to save to backend');
       }
 
-      const pestName = predictionData.predicted_class || 'Unknown Pest';
-      const solutionResponse = await fetch(`http://localhost:8083/api/pest-solutions/pest/${pestName}`);
+      const savedData = await response.json();
+      console.log('Successfully saved pest detection:', savedData);
       
+      // Fetch pest solution after successful save
+      const pestName = predictionData.predicted_class.toLowerCase();
+      const solutionResponse = await fetch(
+        `http://localhost:8083/api/pest-solutions/pest/${pestName}`
+      );
+
       if (solutionResponse.ok) {
         const solutionData = await solutionResponse.json();
-        setPestSolution(solutionData[0]); // Get the first solution
+        setPestSolution(solutionData[0]);
       }
 
       showNotification('success', 'Detection results saved successfully');
+
     } catch (error) {
       console.error('Error saving detection:', error);
-      showNotification('error', 'Failed to save detection results');
+      showNotification('error', error.message || 'Failed to save detection results');
     }
   };
 
