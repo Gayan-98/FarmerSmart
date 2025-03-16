@@ -17,7 +17,7 @@ import { useColorScheme } from "@/hooks/useColorScheme";
 import { router } from "expo-router";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
-const scale = SCREEN_WIDTH / 375; // Base scale on iPhone 8 width
+const scale = SCREEN_WIDTH / 375; 
 
 const normalize = (size) => {
   return Math.round(scale * size);

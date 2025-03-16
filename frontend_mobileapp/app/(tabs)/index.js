@@ -5,6 +5,7 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { ThemedText } from '@/components/ThemedText';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Colors } from '@/constants/Colors';
+import { useAuth } from '@/context/AuthContext';
 
 const WeatherCard = () => (
   <LinearGradient colors={['#4361EE', '#3F37C9']} style={styles.weatherCard}>
@@ -127,6 +128,7 @@ const TaskCard = () => {
 };
 
 export default function HomeScreen() {
+  const { userProfile } = useAuth();
   const colorScheme = useColorScheme();
   const backgroundColor = colorScheme === 'dark' ? Colors.dark.background : Colors.light.background;
 
@@ -139,7 +141,11 @@ export default function HomeScreen() {
       <View style={styles.header}>
         <View>
           <ThemedText style={styles.greeting}>Good Morning 👋</ThemedText>
-          <ThemedText style={styles.farmerName}>John's Farm</ThemedText>
+          <ThemedText style={styles.farmerName}>
+            {userProfile?.farmerDetails ? 
+              `${userProfile.farmerDetails.firstName}'s Farm` 
+              : 'Loading...'}
+          </ThemedText>
         </View>
         <TouchableOpacity onPress={() => router.push('/profile')}>
           <Image
