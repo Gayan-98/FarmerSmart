@@ -4,6 +4,7 @@ import { auth, provider } from '@/config/firebase';
 import { signInWithPopup, onAuthStateChanged, signOut as firebaseSignOut } from 'firebase/auth';
 import { Alert } from 'react-native';
 import { showNotification } from '@/components/CustomAlert';
+import * as ImagePicker from 'expo-image-picker';
 
 const AuthContext = createContext({});
 
