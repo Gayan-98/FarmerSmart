@@ -1,32 +1,118 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rice Disease Prediction</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-<body>
-    <div class="container">
-        <h1>Rice Disease Prediction (testing)</h1>
-        <form action="/predict" method="POST" enctype="multipart/form-data">
-            <input type="file" name="file" accept="image/*" required>
-            <button type="submit">Predict</button>
-        </form>
 
-        {% if prediction %}
-        <div class="prediction-container">
-            <div class="image-container">
-                <h3>Uploaded Image:</h3>
-                <img src="{{ url_for('static', filename=uploaded_image) }}" alt="Uploaded Image" class="uploaded-image">
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Seed Detection WebSocket Interface</title>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    const statusEl = document.getElementById('status');
+                    const seedClassEl = document.getElementById('seed-class');
+                    const logEl = document.getElementById('log');
+                    
+                    // Function to add log message
+                    function addLog(message) {
+                        const logItem = document.createElement('div');
+                        logItem.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+                        logEl.prepend(logItem);
+                        console.log(message);
+                    }
+                    
+                    // Connect to socket.io server
+                    addLog('Connecting to Socket.IO server...');
+                    const socket = io();
+                    
+                    socket.on('connect', function() {
+                        addLog('Connected to Socket.IO server');
+                        statusEl.textContent = 'Connected';
+                        statusEl.className = 'connected';
+                    });
+                    
+                    socket.on('disconnect', function() {
+                        addLog('Disconnected from Socket.IO server');
+                        statusEl.textContent = 'Disconnected';
+                        statusEl.className = 'disconnected';
+                    });
+                    
+                    socket.on('connect_error', function(err) {
+                        addLog(`Connection error: ${err.message}`);
+                        statusEl.textContent = 'Error';
+                        statusEl.className = 'error';
+                    });
+                    
+                    socket.on('response', function(data) {
+                        addLog(`Received response: ${JSON.stringify(data)}`);
+                    });
+                    
+                    socket.on('seed_class', function(data) {
+                        addLog(`Received seed class: ${JSON.stringify(data)}`);
+                        seedClassEl.textContent = data.class;
+                        seedClassEl.className = `class-${data.class.toLowerCase()}`;
+                    });
+                    
+                    // Add manual class emission buttons
+                    document.getElementById('emit-a').addEventListener('click', function() {
+                        socket.emit('seed_class', { class: 'A' });
+                        addLog('Manually emitted Class A');
+                    });
+                    
+                    document.getElementById('emit-b').addEventListener('click', function() {
+                        socket.emit('seed_class', { class: 'B' });
+                        addLog('Manually emitted Class B');
+                    });
+                    
+                    document.getElementById('emit-c').addEventListener('click', function() {
+                        socket.emit('seed_class', { class: 'C' });
+                        addLog('Manually emitted Class C');
+                    });
+                });
+            </script>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 20px; }
+                h1 { color: #333; }
+                .container { display: flex; }
+                .panel { flex: 1; margin: 10px; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+                .connected { color: green; font-weight: bold; }
+                .disconnected { color: red; font-weight: bold; }
+                .error { color: orange; font-weight: bold; }
+                .class-a { color: blue; font-weight: bold; }
+                .class-b { color: green; font-weight: bold; }
+                .class-c { color: purple; font-weight: bold; }
+                #log { height: 200px; overflow-y: auto; margin-top: 20px; padding: 10px; background: #f5f5f5; border: 1px solid #ddd; }
+                #log div { margin-bottom: 5px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+                button { margin: 5px; padding: 8px 15px; cursor: pointer; }
+            </style>
+        </head>
+        <body>
+            <h1>Seed Detection WebSocket Interface</h1>
+            
+            <div class="container">
+                <div class="panel">
+                    <h2>Server Status</h2>
+                    <p>Connection: <span id="status" class="disconnected">Disconnected</span></p>
+                    <p>Last detected seed class: <span id="seed-class">None</span></p>
+                    
+                    <h3>Manual Testing</h3>
+                    <button id="emit-a">Emit Class A</button>
+                    <button id="emit-b">Emit Class B</button>
+                    <button id="emit-c">Emit Class C</button>
+                </div>
+                
+                <div class="panel">
+                    <h2>Image Upload</h2>
+                    <form action="/predict" method="post" enctype="multipart/form-data">
+                        <input type="file" name="image" accept="image/*">
+                        <button type="submit">Analyze Image</button>
+                    </form>
+                    
+                    <h3>Test URL</h3>
+                    <p>To test seed class detection, visit:</p>
+                    <code>/test_event/A</code> (or B or C)
+                </div>
             </div>
-            <div class="solution-container">
-                <h2>Predicted Disease: {{ prediction }}</h2>
-                <h3>Solution:</h3>
-                <div>{{ solution|safe }}</div>
-            </div>
-        </div>
-        {% endif %}
-    </div>
-</body>
-</html>
+            
+            <h2>Event Log</h2>
+            <div id="log"></div>
+        </body>
+        </html>
+        
