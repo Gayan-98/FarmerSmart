@@ -1,10 +1,11 @@
+import React, { useState, useEffect } from 'react';
 import { ScrollView, StyleSheet, View, TouchableOpacity, Dimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { ThemedText } from '@/components/ThemedText';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { router } from 'expo-router';
-import { useState } from 'react';
+import * as Location from 'expo-location';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const scale = SCREEN_WIDTH / 375;
@@ -52,30 +53,67 @@ const NotificationCard = ({ type, title, message, time, read }) => {
 export default function NotificationsScreen() {
   const colorScheme = useColorScheme();
   const backgroundColor = colorScheme === 'dark' ? '#151718' : '#F5F5F5';
-  const [notifications] = useState([
-    {
-      type: 'alert',
-      title: 'Disease Alert',
-      message: 'Potential disease detected in sector A-3',
-      time: '2 hours ago',
-      read: false
-    },
-    {
-      type: 'warning',
-      title: 'Weather Warning',
-      message: 'Heavy rainfall expected in your area',
-      time: '5 hours ago',
-      read: false
-    },
-    {
-      type: 'success',
-      title: 'Harvest Ready',
-      message: 'Optimal conditions for harvest in sector B-2',
-      time: '1 day ago',
-      read: true
-    },
-    // Add more notifications as needed
-  ]);
+  const [notifications, setNotifications] = useState([]);
+
+  useEffect(() => {
+    const fetchPestAlerts = async () => {
+      try {
+        let { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') {
+          console.error('Location permission denied');
+          return;
+        }
+
+        const location = await Location.getCurrentPositionAsync({});
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?lat=${location.coords.latitude}&lon=${location.coords.longitude}&format=json`
+        );
+        const locationData = await response.json();
+        const city = locationData.address?.city;
+
+        if (city) {
+          const alertsResponse = await fetch(
+            `http://localhost:8083/api/pest-alerts/area/${city}`
+          );
+          
+          if (!alertsResponse.ok) throw new Error('Failed to fetch alerts');
+          
+          const alertData = await alertsResponse.json();
+          const newNotifications = [
+            {
+              type: alertData.alertLevel === 'HIGH' ? 'alert' : 'warning',
+              title: `Pest Alert - ${alertData.location}`,
+              message: `Alert Level: ${alertData.alertLevel}\nAffected Farmers: ${alertData.affectedFarmers}\n\nActive Pest Threats:\n${alertData.topThreats
+                .map(threat => `• ${threat.pestName.toUpperCase()}\n  Severity: ${threat.percentage}% of cases`)
+                .join('\n')}`,
+              time: new Date(alertData.timestamp).toLocaleString(),
+              read: false
+            },
+            ...alertData.recentInfestations.slice(0, 3).map(infestation => ({
+              type: 'warning',
+              title: `⚠️ ${infestation.pestName.toUpperCase()}`,
+              message: `New pest detection alert!\nPest Type: ${infestation.pestName}`,
+              time: new Date(infestation.detectionDateTime).toLocaleString(),
+              read: false
+            }))
+          ];
+
+          setNotifications(newNotifications);
+        }
+      } catch (error) {
+        console.error('Error fetching pest alerts:', error);
+        setNotifications([{
+          type: 'warning',
+          title: 'Connection Error',
+          message: 'Unable to fetch pest alerts',
+          time: new Date().toLocaleString(),
+          read: false
+        }]);
+      }
+    };
+
+    fetchPestAlerts();
+  }, []);
 
   return (
     <ScrollView style={[styles.container, { backgroundColor }]}>
@@ -90,9 +128,9 @@ export default function NotificationsScreen() {
           colors={['#FF9800', '#F57C00']}
           style={styles.header}
         >
-          <ThemedText style={styles.headerTitle}>Notifications</ThemedText>
+          <ThemedText style={styles.headerTitle}>Pest Alerts</ThemedText>
           <ThemedText style={styles.headerSubtitle}>
-            Stay updated with important alerts
+            {notifications.length} active alerts in your area
           </ThemedText>
         </LinearGradient>
       </View>

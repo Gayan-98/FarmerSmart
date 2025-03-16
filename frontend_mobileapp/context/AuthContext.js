@@ -9,6 +9,18 @@ const AuthContext = createContext({});
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
+  const [userProfile, setUserProfile] = useState(null);
+
+  const fetchUserProfile = async (userId) => {
+    try {
+      const response = await fetch(`http://localhost:8083/auth/user/${userId}`);
+      if (!response.ok) throw new Error('Failed to fetch user profile');
+      const profileData = await response.json();
+      setUserProfile(profileData);
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+    }
+  };
 
   const signIn = async (email, password) => {
     try {
@@ -17,37 +29,36 @@ export function AuthProvider({ children }) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          email,
-          password
-        }),
+        body: JSON.stringify({ email, password }),
       });
 
       const data = await response.json();
-      console.log('Login response:', data);
-
+      
       if (!response.ok) {
         showNotification('error', data.message || 'Invalid credentials');
         return;
       }
 
-      // Store complete user data with the correct ID field
+      // Store the user ID from login response
       const userData = {
-        ...data,
-        id: data.id,  // Changed from _id to id
+        id: data.userId,
         username: data.username,
-        email: data.email,
-        role: data.role,
-        firstName: data.firstName,
-        lastName: data.lastName,
-        landLocation: data.landLocation
+        role: data.role
       };
+      setUser(userData);
+
+      // Fetch user profile using the ID from login response
+      if (data.id) {
+        const profileResponse = await fetch(`http://localhost:8083/auth/user/${data.userId}`);
+        if (!profileResponse.ok) {
+          throw new Error('Failed to fetch user profile');
+        }
+        const profileData = await profileResponse.json();
+        setUserProfile(profileData);
+      }
 
       showNotification('success', 'Welcome back! Login successful.');
-      setTimeout(() => {
-        setUser(userData);
-        router.replace('/(tabs)');
-      }, 1500);
+      router.replace('/(tabs)');
 
     } catch (error) {
       console.error('Login Error:', error);
@@ -103,20 +114,33 @@ export function AuthProvider({ children }) {
   };
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
-      if (user) {
-        router.replace('/(tabs)');
-      } else {
+    const checkUser = async () => {
+      try {
+        if (user?.id) {
+          const profileResponse = await fetch(`http://localhost:8083/auth/user/${user.id}`);
+          if (profileResponse.ok) {
+            const profileData = await profileResponse.json();
+            setUserProfile(profileData);
+            router.replace('/(tabs)');
+          } else {
+            setUser(null);
+            setUserProfile(null);
+            router.replace('/(auth)/login');
+          }
+        } else {
+          router.replace('/(auth)/login');
+        }
+      } catch (error) {
+        console.error('Session check error:', error);
         router.replace('/(auth)/login');
       }
-    });
+    };
 
-    return unsubscribe;
-  }, []);
+    checkUser();
+  }, [user?.id]);
 
   return (
-    <AuthContext.Provider value={{ user, signIn, signUp, signOut, signInWithGoogle }}>
+    <AuthContext.Provider value={{ user, userProfile, signIn, signUp, signOut, signInWithGoogle }}>
       {children}
     </AuthContext.Provider>
   );

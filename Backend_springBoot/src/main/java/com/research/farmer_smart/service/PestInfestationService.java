@@ -8,5 +8,6 @@ public interface PestInfestationService {
     PestInfestation recordPestInfestation(PestInfestationRequest request);
     List<PestInfestation> getFarmerPestInfestations(String farmerId);
     List<PestInfestation> searchByPestName(String pestName);
+    List<PestInfestation> searchByLocation(String location);
     PestInfestation getPestInfestationById(String id);
 } 

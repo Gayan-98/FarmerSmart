@@ -25,6 +25,10 @@ public class Expert {
   private String lastName;
 
   @NotBlank
+  @Size(max = 60)
+  private String email;
+
+  @NotBlank
   @Digits(integer = 10, fraction = 0)
   private String contactNumber;
 
@@ -33,6 +37,12 @@ public class Expert {
 
   @NotBlank
   private String designation;
+
+  @NotBlank
+  private String specialization;
+
+  @NotBlank
+  private String qualifications;
 
   @NotNull
   private LocalDate registrationDate;

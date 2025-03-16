@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { ScrollView, StyleSheet, View, Image, TouchableOpacity, Dimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
@@ -40,7 +41,7 @@ const ActionButton = ({ icon, title, onPress }) => {
 };
 
 export default function ProfileScreen() {
-  const { user, signOut } = useAuth();
+  const { userProfile, signOut } = useAuth();
   const colorScheme = useColorScheme();
   const backgroundColor = colorScheme === 'dark' ? '#151718' : '#F5F5F5';
 
@@ -57,61 +58,59 @@ export default function ProfileScreen() {
   return (
     <ScrollView style={[styles.container, { backgroundColor }]}>
       <View style={styles.headerContainer}>
-        <LinearGradient
-          colors={['#4CAF50', '#2E7D32']}
-          style={styles.header}
-        >
+        <LinearGradient colors={['#4CAF50', '#2E7D32']} style={styles.header}>
           <View style={styles.headerTop}>
             <ThemedText style={styles.headerTitle}>Profile</ThemedText>
-            <TouchableOpacity 
-              style={styles.logoutButton}
-              onPress={handleLogout}
-            >
+            <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
               <MaterialIcons name="logout" size={24} color="#FFFFFF" />
               <ThemedText style={styles.logoutText}>Logout</ThemedText>
             </TouchableOpacity>
           </View>
           
           <View style={styles.headerContent}>
-            <Image
-              source={require('@/assets/images/download.jpeg')}
-              style={styles.profileImage}
-            />
+            <Image source={require('@/assets/images/download.jpeg')} style={styles.profileImage} />
             <View style={styles.profileInfo}>
-              <ThemedText style={styles.name}>{user?.firstName || "John's Farm"}</ThemedText>
+              <ThemedText style={styles.name}>
+                {userProfile?.farmerDetails ? 
+                  `${userProfile.farmerDetails.firstName} ${userProfile.farmerDetails.lastName}` 
+                  : 'Loading...'}
+              </ThemedText>
               <View style={styles.locationContainer}>
                 <MaterialIcons name="location-on" size={16} color="#FFFFFF" />
-                <ThemedText style={styles.location}>California, USA</ThemedText>
+                <ThemedText style={styles.location}>
+                  {userProfile?.farmerDetails?.landLocation || 'Loading location...'}
+                </ThemedText>
               </View>
             </View>
           </View>
         </LinearGradient>
       </View>
 
-      <View style={styles.statsContainer}>
-        <View style={styles.statCard}>
-          <ThemedText style={styles.statValue}>150</ThemedText>
-          <ThemedText style={styles.statLabel}>Acres</ThemedText>
-        </View>
-        <View style={styles.statDivider} />
-        <View style={styles.statCard}>
-          <ThemedText style={styles.statValue}>5</ThemedText>
-          <ThemedText style={styles.statLabel}>Fields</ThemedText>
-        </View>
-        <View style={styles.statDivider} />
-        <View style={styles.statCard}>
-          <ThemedText style={styles.statValue}>8</ThemedText>
-          <ThemedText style={styles.statLabel}>Years</ThemedText>
-        </View>
-      </View>
-
       <View style={styles.section}>
         <ThemedText style={styles.sectionTitle}>Farm Information</ThemedText>
         <View style={styles.cardsGrid}>
-          <ProfileCard icon="email" title="Email" value="john@farmassist.com" />
-          <ProfileCard icon="eco" title="Farming Type" value="Organic Farming" />
-          <ProfileCard icon="grass" title="Main Crop" value="Tomatoes" />
-          <ProfileCard icon="water-drop" title="Irrigation" value="Drip System" />
+          <ProfileCard 
+            icon="email" 
+            title="Email" 
+            value={userProfile?.email || 'Loading...'} 
+          />
+          <ProfileCard 
+            icon="phone" 
+            title="Contact" 
+            value={userProfile?.farmerDetails?.contactNumber || 'Loading...'} 
+          />
+          <ProfileCard 
+            icon="landscape" 
+            title="Land Size" 
+            value={`${userProfile?.farmerDetails?.landSize || '0'} acres`} 
+          />
+          <ProfileCard 
+            icon="event" 
+            title="Joined" 
+            value={userProfile?.farmerDetails?.registrationDate ? 
+              new Date(userProfile.farmerDetails.registrationDate).toLocaleDateString() 
+              : 'Loading...'} 
+          />
         </View>
       </View>
 
