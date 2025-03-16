@@ -183,9 +183,11 @@ export default function DiseaseDetectionScreen() {
       }
 
       // Fetch disease solution
-      const diseaseName = predictionData.predicted_class || "Unknown Disease";
+      const diseaseName = prediction.prediction;
+      console.log(diseaseName)
       const solutionResponse = await fetch(
-        `http://localhost:8083/api/pest-solutions/pest/${pestName}`
+        `http://localhost:8083/disease-solutions/disease/${diseaseName}`,
+        console.log(diseaseName)
       );
 
       if (solutionResponse.ok) {
@@ -244,7 +246,25 @@ export default function DiseaseDetectionScreen() {
 
       // Parse the response
       const data = await apiResponse.json();
+      console.log("Backend Response:", data); 
       setPrediction(data);
+
+      const diseaseName = data.prediction;
+      console.log(diseaseName)
+      const solutionResponse = await fetch(
+        `http://localhost:8083/disease-solutions/disease/${diseaseName}`,
+        console.log(diseaseName)
+      );
+
+      console.log(solutionResponse)
+
+      if (solutionResponse.ok) {
+        const solutionData = await solutionResponse.json();
+        setDiseaseSolution(solutionData[0]); // Get the first solution
+      }
+
+      Alert.alert("Success", "Detection results saved successfully");
+    
 
       // Save the detection results
       await saveDiseaseDetection(data);
@@ -325,7 +345,7 @@ export default function DiseaseDetectionScreen() {
                     color="#9C27B0"
                   />
                   <ThemedText style={styles.predictionText}>
-                    Class {prediction.predicted_class}
+                  Class {prediction.prediction}
                   </ThemedText>
                   <ThemedText style={styles.predictionDescription}>
                     Analysis completed successfully

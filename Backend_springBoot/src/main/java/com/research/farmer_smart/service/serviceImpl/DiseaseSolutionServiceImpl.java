@@ -29,7 +29,7 @@ public class DiseaseSolutionServiceImpl implements DiseaseSolutionService {
   private final DiseasesDetectionRepository diseasesDetectionRepository;
 
   private static final Set<String> VALID_DISEASE_NAMES = Set.of(
-      "bacterial blight", "blast", "brown spot", "tungro"
+      "Bacterial Blight", "blast", "brown spot", "tungro"
   );
 
   @Override
