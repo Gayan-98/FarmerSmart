@@ -21,8 +21,9 @@ public class SecurityConfig {
             .requestMatchers("/auth/signup", "/auth/login").permitAll()
             .requestMatchers("/api/pest-infestations/**").permitAll()
             .requestMatchers("/diseases-detection/**").permitAll()
-                .requestMatchers("/api/pest-solutions/**").permitAll()
+            .requestMatchers("/api/pest-solutions/**").permitAll()
             .requestMatchers("/rice-quality/**").permitAll()
+            .requestMatchers("/disease-solutions/**").permitAll()
             .anyRequest().authenticated()
         )
         .sessionManagement(session -> session.sessionCreationPolicy(STATELESS));
