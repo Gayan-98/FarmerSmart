@@ -8,6 +8,8 @@ import com.research.farmer_smart.model.Farmer;
 import com.research.farmer_smart.repository.DiseasesDetectionRepository;
 import com.research.farmer_smart.repository.FarmerRepository;
 import com.research.farmer_smart.service.DiseasesDetectionService;
+
+import java.time.LocalDateTime;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -54,5 +56,14 @@ public class DiseasesDetectionServiceImpl implements DiseasesDetectionService {
   public DiseasesDetection getPestInfestationById(String id) {
     return diseasesDetectionRepository.findById(id)
         .orElseThrow(() -> new DiseasesDetectionException(" disease detection record not found"));
+  }
+
+  @Override
+  public List<DiseasesDetection> searchByLocation(String location) {
+    LocalDateTime oneWeekAgo = LocalDateTime.now().minusDays(7);
+    return diseasesDetectionRepository.findByDetectedLocationContainingIgnoreCaseAndDetectionDateTimeAfter(
+            location,
+            oneWeekAgo
+    );
   }
 }

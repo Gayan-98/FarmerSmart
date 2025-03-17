@@ -25,6 +25,7 @@ public class SecurityConfig {
             .requestMatchers("/rice-quality/**").permitAll()
             .requestMatchers("/disease-solutions/**").permitAll()
             .requestMatchers("/api/pest-alerts/**").permitAll()
+            .requestMatchers("/api/disease-alerts/**").permitAll()
             .requestMatchers("/api/farmers/**").permitAll()
             .requestMatchers("auth/user/**").permitAll()
             .requestMatchers("/weed-seed-detection/**").permitAll()
