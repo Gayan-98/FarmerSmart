@@ -1,11 +1,29 @@
-import { ScrollView, StyleSheet, View, TouchableOpacity, Image, Alert } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { ThemedText } from '@/components/ThemedText';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import { StatusBar } from 'expo-status-bar';
-import * as ImagePicker from 'expo-image-picker';
-import { useState } from 'react';
-import { useColorScheme } from '@/hooks/useColorScheme';
+import {
+  ScrollView,
+  StyleSheet,
+  View,
+  TouchableOpacity,
+  Image,
+  Alert,
+  Dimensions,
+  SafeAreaView,
+} from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { ThemedText } from "@/components/ThemedText";
+import MaterialIcons from "react-native-vector-icons/MaterialIcons";
+import { StatusBar } from "expo-status-bar";
+import * as ImagePicker from "expo-image-picker";
+import { useState } from "react";
+import { useColorScheme } from "@/hooks/useColorScheme";
+import { router } from "expo-router";
+
+// Add these lines for normalize function
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
+const scale = SCREEN_WIDTH / 375;
+
+const normalize = (size) => {
+  return Math.round(scale * size);
+};
 
 const WeedDetectionCard = ({ title, description, icon, onPress }) => (
   <TouchableOpacity onPress={onPress}>
@@ -39,6 +57,7 @@ export default function WeedDetectionScreen() {
         allowsEditing: true,
         aspect: [4, 3],
         quality: 1,
+        base64: true,
       });
 
       if (!result.canceled) {
@@ -49,6 +68,70 @@ export default function WeedDetectionScreen() {
       Alert.alert('Error', 'Failed to pick image. Please try again.');
     }
   };
+
+  const handleAnalyze = async () => {
+    if (!selectedImage) return;
+    
+    setLoading(true);
+    try {
+      const formData = new FormData();
+      const base64Data = selectedImage.base64;
+      const imageBlob = await fetch(`data:image/jpeg;base64,${base64Data}`).then(r => r.blob());
+      formData.append('image', imageBlob, 'weed_sample.jpg');
+
+      const response = await fetch('http://127.0.0.1:5003/predict', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Analysis failed');
+      }
+
+      const data = await response.json();
+      setPrediction(data);
+    } catch (error) {
+      console.error('Error:', error);
+      Alert.alert('Error', 'Failed to analyze image');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const WeedAnalysisResults = ({ prediction }) => (
+    <View style={styles.analysisResults}>
+      <View style={styles.resultHeader}>
+        <MaterialIcons name="analytics" size={normalize(24)} color="#2196F3" />
+        <ThemedText style={styles.resultTitle}>Analysis Results</ThemedText>
+      </View>
+      
+      <View style={styles.statsGrid}>
+        <View style={styles.statCard}>
+          <ThemedText style={styles.statValue}>{prediction.total_seeds}</ThemedText>
+          <ThemedText style={styles.statLabel}>Total Seeds</ThemedText>
+        </View>
+
+        <View style={styles.seedBreakdown}>
+          {Object.entries(prediction.seed_counts).map(([type, count]) => (
+            count > 0 && (
+              <View key={type} style={styles.seedRow}>
+                <MaterialIcons name="grass" size={normalize(20)} color="#2196F3" />
+                <ThemedText style={styles.seedType}>
+                  {type.replace(/_/g, ' ')}:
+                </ThemedText>
+                <ThemedText style={styles.seedCount}>{count}</ThemedText>
+              </View>
+            )
+          ))}
+        </View>
+      </View>
+
+      <View style={styles.resultCard}>
+        <ThemedText style={styles.resultLabel}>Seed Class:</ThemedText>
+        <ThemedText style={styles.classValue}>Class {prediction.seed_class}</ThemedText>
+      </View>
+    </View>
+  );
 
   return (
     <ScrollView style={[styles.container, { backgroundColor }]}>
@@ -65,12 +148,6 @@ export default function WeedDetectionScreen() {
       <View style={styles.content}>
         <View style={styles.mainActions}>
           <WeedDetectionCard
-            title="Quick Scan"
-            description="Instant weed seed detection with your camera"
-            icon="camera"
-            onPress={() => {}}
-          />
-          <WeedDetectionCard
             title="Upload Image"
             description="Analyze existing photos from your gallery"
             icon="photo-library"
@@ -85,15 +162,22 @@ export default function WeedDetectionScreen() {
               style={styles.previewImage}
             />
             <TouchableOpacity 
-              style={[styles.analyzeButton, { backgroundColor: '#2196F3' }]}
-              onPress={() => {}}
+              style={[
+                styles.analyzeButton, 
+                { backgroundColor: '#2196F3' },
+                loading && styles.analyzeButtonDisabled
+              ]}
+              onPress={handleAnalyze}
+              disabled={loading}
             >
               <ThemedText style={styles.analyzeButtonText}>
-                Analyze Image
+                {loading ? 'Analyzing...' : 'Analyze Image'}
               </ThemedText>
             </TouchableOpacity>
           </View>
         )}
+
+        {prediction && <WeedAnalysisResults prediction={prediction} />}
 
         <View style={styles.tipsSection}>
           <ThemedText style={styles.sectionTitle}>Detection Tips</ThemedText>
@@ -219,5 +303,74 @@ const styles = StyleSheet.create({
     marginLeft: 15,
     flex: 1,
     fontSize: 14,
+    color:'#FFFFF'
+  },
+  analysisResults: {
+    marginTop: normalize(24),
+    marginBottom: normalize(24),
+  },
+  resultHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: normalize(16),
+  },
+  resultTitle: {
+    fontSize: normalize(20),
+    fontWeight: 'bold',
+    color: 'white',
+    marginLeft: normalize(8),
+  },
+  statsGrid: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: normalize(12),
+    padding: normalize(16),
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  seedBreakdown: {
+    marginTop: normalize(16),
+    gap: normalize(12),
+  },
+  seedRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: normalize(8),
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
+  },
+  seedType: {
+    flex: 1,
+    fontSize: normalize(14),
+    color: '#666666',
+    textTransform: 'capitalize',
+    marginLeft: normalize(8),
+  },
+  seedCount: {
+    fontSize: normalize(16),
+    fontWeight: 'bold',
+    color: '#2196F3',
+  },
+  resultCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: normalize(12),
+    padding: normalize(16),
+    marginTop: normalize(16),
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  classValue: {
+    fontSize: normalize(24),
+    fontWeight: 'bold',
+    color: '#2196F3',
+    marginTop: normalize(8),
+  },
+  analyzeButtonDisabled: {
+    backgroundColor: '#90CAF9',
   },
 }); 

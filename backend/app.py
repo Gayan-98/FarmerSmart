@@ -8,6 +8,7 @@ from PIL import Image
 import firebase_admin
 from firebase_admin import credentials, db
 import logging
+from flask_cors import CORS
 
 # Set up logging for debugging
 logging.basicConfig(level=logging.DEBUG)
@@ -15,7 +16,19 @@ logging.basicConfig(level=logging.DEBUG)
 # Initialize Flask app and SocketIO
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'seed-detection-secret'
-socketio = SocketIO(app, cors_allowed_origins="*", logger=True, engineio_logger=True)
+
+# Configure CORS
+CORS(app, resources={
+    r"/*": {
+        "origins": ["http://localhost:8081", "http://127.0.0.1:8081"],
+        "methods": ["GET", "POST", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization"],
+        "expose_headers": ["Content-Type"],
+        "supports_credentials": True
+    }
+})
+
+socketio = SocketIO(app, cors_allowed_origins=["http://localhost:8081", "http://127.0.0.1:8081"])
 
 # Load the trained model
 MODEL_PATH = "hybrid_seed_classifier.h5"  # Update this with your actual model path
