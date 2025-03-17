@@ -1,0 +1,87 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+ENV/
+.env
+.venv
+env/
+env.bak/
+venv.bak/
+
+# Model files
+models/
+*.h5
+*.keras
+*.pth
+*.pt
+*.onnx
+*.tflite
+*.pb
+hybrid_seed_classifier.h5
+disease_model.keras
+rice_classification_model.h5
+
+# Firebase credentials
+*firebase-adminsdk*.json
+weed-seed-count-firebase-adminsdk*.json
+
+# IDE specific files
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Logs and databases
+*.log
+*.sqlite
+*.db
+
+# Uploads and static files
+uploads/
+static/uploads/
+temp/
+instance/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Dependencies
+node_modules/
+package-lock.json
+yarn.lock
+
+# Production build files
+/build
+/dist
+
+# Debug files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# System Files
+.DS_Store
+Thumbs.db
