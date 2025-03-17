@@ -53,7 +53,7 @@ const DiseaseCard = ({ title, description, icon, onPress }) => (
 );
 
 export default function DiseaseDetectionScreen() {
-  const { user } = useAuth();
+  const { user, userProfile } = useAuth();
   const [selectedImage, setSelectedImage] = useState(null);
   const [prediction, setPrediction] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -120,85 +120,55 @@ export default function DiseaseDetectionScreen() {
 
   const saveDiseaseDetection = async (predictionData) => {
     try {
-      if (!user?.id) {
-        Alert.alert("Error", "User not properly authenticated");
+      if (!userProfile?.farmerDetails?.id) {
+        console.log('Current user data:', userProfile);
+        Alert.alert('Error', 'User not properly authenticated');
         return;
       }
 
-      const diseaseDetectionRef = collection(db, "diseaseDetections");
-      const detectionData = {
-        userId: user.id,
-        username: user.username || "unknown",
-        timestamp: new Date().toISOString(),
-        prediction: {
-          class: predictionData.predicted_class || "Unknown",
-          confidence: parseFloat(predictionData.confidence) || 0,
-        },
-        location: location
-          ? {
-              latitude: location.coords.latitude,
-              longitude: location.coords.longitude,
-              fullAddress: locationName,
-              addressDetails: locationData?.address
-                ? {
-                    quarter: locationData.address.quarter || "",
-                    suburb: locationData.address.suburb || "",
-                    city: locationData.address.city || "",
-                    district: locationData.address.state_district || "",
-                    province: locationData.address.state || "",
-                  }
-                : null,
-            }
-          : null,
-        createdAt: new Date().getTime(),
-      };
-
-      await addDoc(diseaseDetectionRef, detectionData);
-
-      // Save to backend
       const backendData = {
-        farmerId: user.id,
-        diseaseName: predictionData.predicted_class || "Unknown Disease",
-        detectedLocation:
-          locationName || user?.landLocation || "Unknown Location",
-        coordinates: location
-          ? {
-              latitude: location.coords.latitude,
-              longitude: location.coords.longitude,
-            }
-          : null,
-        detectionDateTime: new Date().toISOString(),
+        farmerId: userProfile.farmerDetails.id,
+        diseaseName: predictionData.prediction.toLowerCase(),
+        detectedLocation: locationName || userProfile.farmerDetails.landLocation || 'Unknown Location',
+        detectionDateTime: new Date().toISOString()
       };
 
-      const backendResponse = await fetch("http://127.0.0.1:5000/predict", {
-        method: "POST",
+      console.log('Sending disease detection data:', backendData);
+
+      // Save disease detection
+      const response = await fetch('http://localhost:8083/diseases-detection', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify(backendData),
+        body: JSON.stringify(backendData)
       });
 
-      if (!backendResponse.ok) {
-        throw new Error("Failed to save to backend");
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to save to backend');
       }
 
+      const savedData = await response.json();
+      console.log('Successfully saved disease detection:', savedData);
+
       // Fetch disease solution
-      const diseaseName = prediction.prediction;
-      console.log(diseaseName)
+      const diseaseName = predictionData.prediction.toLowerCase();
       const solutionResponse = await fetch(
-        `http://localhost:8083/disease-solutions/disease/${diseaseName}`,
-        console.log(diseaseName)
+        `http://localhost:8083/disease-solutions/disease/${diseaseName}`
       );
 
       if (solutionResponse.ok) {
         const solutionData = await solutionResponse.json();
         setDiseaseSolution(solutionData[0]); // Get the first solution
+        console.log('Disease solution:', solutionData[0]);
       }
 
-      Alert.alert("Success", "Detection results saved successfully");
+      Alert.alert('Success', 'Detection results saved successfully');
+
     } catch (error) {
-      console.error("Error saving detection:", error);
-      Alert.alert("Error", "Failed to save detection results");
+      console.error('Error saving detection:', error);
+      Alert.alert('Error', error.message || 'Failed to save detection results');
     }
   };
 
