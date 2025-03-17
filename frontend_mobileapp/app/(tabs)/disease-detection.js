@@ -52,6 +52,27 @@ const DiseaseCard = ({ title, description, icon, onPress }) => (
   </TouchableOpacity>
 );
 
+const TipsSection = () => (
+  <View style={styles.tipsSection}>
+    <View style={styles.sectionHeader}>
+      <MaterialIcons name="lightbulb" size={normalize(24)} color="#9C27B0" />
+      <ThemedText style={styles.sectionTitle}>Detection Tips</ThemedText>
+    </View>
+    <View style={styles.tipsContainer}>
+      {[
+        { icon: "wb-sunny", text: "Take photos in good lighting" },
+        { icon: "center-focus-strong", text: "Focus on affected areas" },
+        { icon: "compare", text: "Include healthy parts for comparison" },
+      ].map((tip, index) => (
+        <View key={index} style={styles.tipCard}>
+          <MaterialIcons name={tip.icon} size={normalize(24)} color="#9C27B0" />
+          <ThemedText style={styles.tipText}>{tip.text}</ThemedText>
+        </View>
+      ))}
+    </View>
+  </View>
+);
+
 export default function DiseaseDetectionScreen() {
   const { user, userProfile } = useAuth();
   const [selectedImage, setSelectedImage] = useState(null);
@@ -377,31 +398,7 @@ export default function DiseaseDetectionScreen() {
             ))}
           </View>
 
-          <View style={styles.tipsSection}>
-            <ThemedText style={styles.sectionTitle}>Detection Tips</ThemedText>
-            <View style={styles.tipsContainer}>
-              {[
-                { icon: "wb-sunny", text: "Take photos in good lighting" },
-                {
-                  icon: "center-focus-strong",
-                  text: "Focus on affected areas",
-                },
-                {
-                  icon: "compare",
-                  text: "Include healthy parts for comparison",
-                },
-              ].map((tip, index) => (
-                <View key={index} style={styles.tipCard}>
-                  <MaterialIcons
-                    name={tip.icon}
-                    size={normalize(24)}
-                    color="#9C27B0"
-                  />
-                  <ThemedText style={styles.tipText}>{tip.text}</ThemedText>
-                </View>
-              ))}
-            </View>
-          </View>
+          <TipsSection />
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -540,10 +537,16 @@ const styles = StyleSheet.create({
   tipsSection: {
     marginTop: normalize(30),
   },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: normalize(16),
+  },
   sectionTitle: {
     fontSize: normalize(20),
-    fontWeight: "bold",
-    marginBottom: normalize(15),
+    fontWeight: 'bold',
+    color: '#333333',
+    marginLeft: normalize(8),
   },
   tipsContainer: {
     gap: normalize(12),
@@ -563,6 +566,7 @@ const styles = StyleSheet.create({
   tipText: {
     marginLeft: normalize(12),
     fontSize: normalize(14),
+    color: '#333333',
     flex: 1,
   },
   predictionResult: {

@@ -493,6 +493,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 15,
+    color:'#FFFFF'
   },
   tipsContainer: {
     gap: 10,
@@ -521,6 +522,7 @@ const styles = StyleSheet.create({
   tipText: {
     flex: 1,
     fontSize: 14,
+    color:'#FFFFF'
   },
   recentSection: {
     padding: 20,
