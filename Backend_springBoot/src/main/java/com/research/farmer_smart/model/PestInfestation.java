@@ -25,5 +25,11 @@ public class PestInfestation {
     private String detectedLocation;
 
     @NotNull
+    private Double latitude;
+
+    @NotNull
+    private Double longitude;
+
+    @NotNull
     private LocalDateTime detectionDateTime;
 } 

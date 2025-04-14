@@ -22,9 +22,8 @@ export default function TabLayout() {
           backgroundColor,
           height: 60,
           paddingBottom: 10,
-          elevation: 0,
+          boxShadow: 'none',
           borderTopWidth: 0,
-          shadowOpacity: 0,
           position: 'absolute',
           bottom: 0,
           left: 0,
@@ -64,16 +63,16 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="rice-quality"
+        name="pest-map"
         options={{
-          tabBarIcon: ({ color }) => <MaterialIcons name="grain" size={28} color={color} />,
+          tabBarIcon: ({ color }) => <MaterialIcons name="map" size={28} color={color} />,
           headerShown: false,
         }}
       />
       <Tabs.Screen
-        name="explore"
+        name="rice-quality"
         options={{
-          tabBarIcon: ({ color }) => <MaterialIcons name="explore" size={28} color={color} />,
+          tabBarIcon: ({ color }) => <MaterialIcons name="grain" size={28} color={color} />,
           headerShown: false,
         }}
       />

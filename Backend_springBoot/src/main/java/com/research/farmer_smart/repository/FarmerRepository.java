@@ -3,9 +3,11 @@ package com.research.farmer_smart.repository;
 import com.research.farmer_smart.model.Farmer;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+@Repository
 public interface FarmerRepository extends MongoRepository<Farmer, String> {
     // This will match partial locations more flexibly
     @Query("{ 'landLocation': { $regex: ?0, $options: 'i' } }")

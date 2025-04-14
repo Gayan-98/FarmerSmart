@@ -157,7 +157,7 @@ export default function RiceQualityScreen() {
       // Append the image blob to FormData
       formData.append('image', imageBlob, 'rice_sample.jpg');
 
-      const apiResponse = await fetch('http://127.0.0.1:5001/analyze', {
+      const apiResponse = await fetch('http://127.0.0.1:5002/analyze', {
         method: 'POST',
         body: formData,
         headers: {

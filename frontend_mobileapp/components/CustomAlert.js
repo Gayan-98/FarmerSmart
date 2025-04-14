@@ -1,4 +1,4 @@
-import { View, StyleSheet, Animated, Dimensions } from 'react-native';
+import { View, StyleSheet, Animated, Dimensions, Platform } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { useEffect, useRef, useState } from 'react';
@@ -19,12 +19,12 @@ export default function CustomAlert() {
       Animated.sequence([
         Animated.spring(translateY, {
           toValue: 0,
-          useNativeDriver: true,
+          useNativeDriver: Platform.OS !== 'web',
         }),
         Animated.delay(duration),
         Animated.spring(translateY, {
           toValue: -100,
-          useNativeDriver: true,
+          useNativeDriver: Platform.OS !== 'web',
         })
       ]).start(() => setAlertConfig(null));
     };
@@ -52,7 +52,7 @@ export default function CustomAlert() {
       <MaterialIcons 
         name={alertConfig.type === 'success' ? 'check-circle' : 'error'} 
         size={24} 
-        color="#FFFFFF" 
+        color="white" 
       />
       <ThemedText style={styles.message}>{alertConfig.message}</ThemedText>
     </Animated.View>
@@ -72,7 +72,7 @@ const styles = StyleSheet.create({
     zIndex: 1000,
   },
   message: {
-    color: '#FFFFFF',
+    color: 'white',
     marginLeft: 8,
     fontSize: 16,
     fontWeight: '500',

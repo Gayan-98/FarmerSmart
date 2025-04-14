@@ -230,7 +230,7 @@ export default function PestDetectionScreen() {
       const formData = new FormData();
       formData.append('image', imageBlob, 'image.jpg');
 
-      const apiResponse = await fetch('http://127.0.0.1:5002/predict', {
+      const apiResponse = await fetch('http://127.0.0.1:5001/predict', {
         method: 'POST',
         body: formData,
         headers: {

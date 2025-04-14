@@ -261,4 +261,41 @@ const styles = StyleSheet.create({
   loginButtonDisabled: {
     backgroundColor: '#E0E0E0',
   },
+  card: {
+    backgroundColor: 'white',
+    borderRadius: 10,
+    padding: 20,
+    width: '90%',
+    maxWidth: 400,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+      },
+      android: {
+        elevation: 5,
+      },
+      web: {
+        boxShadow: '0 2px 4px rgba(0,0,0,0.25)',
+      },
+    }),
+  },
+  button: {
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.2,
+        shadowRadius: 1.41,
+      },
+      android: {
+        elevation: 3,
+      },
+      web: {
+        boxShadow: '0 1px 1.41px rgba(0,0,0,0.2)',
+      },
+    }),
+  },
 }); 
