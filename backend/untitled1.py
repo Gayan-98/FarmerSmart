@@ -38,7 +38,7 @@ def load_model():
     model = models.resnet18(pretrained=False)
     num_features = model.fc.in_features
     model.fc = nn.Linear(num_features, len(class_names))
-    model.load_state_dict(torch.load(r'/home/isuru/Pictures/reasearch_project/FarmerSmart/backend/models/model.pth'))
+    model.load_state_dict(torch.load(r'/home/isuru/Pictures/reasearch_project/FarmerSmart/backend/models/pest_model_state_dict.pth'))
     model.eval()
     return model
 
@@ -101,4 +101,4 @@ def predict():
         return response
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', debug=True, port=5002) 
+    app.run(host='0.0.0.0', debug=True, port=5001) 

@@ -20,15 +20,26 @@ public class PestInfestationController {
     private final PestInfestationService pestInfestationService;
 
     @PostMapping
-    public ResponseEntity<PestInfestation> recordPestInfestation(@RequestBody PestInfestationRequest request) {
-        logger.info("Received pest infestation request: {}", request);
+    public ResponseEntity<PestInfestation> recordPestInfestation(@RequestBody PestInfestation pestInfestation) {
         try {
-            PestInfestation result = pestInfestationService.recordPestInfestation(request);
-            logger.info("Successfully recorded pest infestation: {}", result);
-            return ResponseEntity.ok(result);
+            logger.info("Received request to record pest infestation: {}", pestInfestation);
+            PestInfestation savedInfestation = pestInfestationService.savePestInfestation(pestInfestation);
+            return ResponseEntity.ok(savedInfestation);
         } catch (Exception e) {
-            logger.error("Error recording pest infestation: ", e);
-            throw e;
+            logger.error("Error recording pest infestation: {}", e.getMessage());
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @GetMapping
+    public ResponseEntity<List<PestInfestation>> getAllPestInfestations() {
+        try {
+            logger.info("Received request to get all pest infestations");
+            List<PestInfestation> infestations = pestInfestationService.getAllPestInfestations();
+            return ResponseEntity.ok(infestations);
+        } catch (Exception e) {
+            logger.error("Error getting pest infestations: {}", e.getMessage());
+            return ResponseEntity.internalServerError().build();
         }
     }
 
@@ -44,6 +55,14 @@ public class PestInfestationController {
 
     @GetMapping("/{id}")
     public ResponseEntity<PestInfestation> getPestInfestationById(@PathVariable String id) {
-        return ResponseEntity.ok(pestInfestationService.getPestInfestationById(id));
+        try {
+            logger.info("Received request to get pest infestation by id: {}", id);
+            return pestInfestationService.getPestInfestationById(id)
+                    .map(ResponseEntity::ok)
+                    .orElse(ResponseEntity.notFound().build());
+        } catch (Exception e) {
+            logger.error("Error getting pest infestation by id: {}", e.getMessage());
+            return ResponseEntity.internalServerError().build();
+        }
     }
 } 

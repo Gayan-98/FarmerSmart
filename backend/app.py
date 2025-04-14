@@ -351,4 +351,4 @@ if __name__ == "__main__":
     print("Starting Flask-SocketIO server...")
     print("WebSocket server will be available at: ws://hostname:5000/socket.io/")
     print("====================================")
-    socketio.run(app, host='0.0.0.0', port=5002, debug=True, allow_unsafe_werkzeug=True)
+    socketio.run(app, host='0.0.0.0', port=5003, debug=True, allow_unsafe_werkzeug=True)

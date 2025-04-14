@@ -1,4 +1,4 @@
-import os
+0import os
 import cv2
 import numpy as np
 import tensorflow as tf
@@ -42,6 +42,9 @@ def classify_rice_grain(length, rice_type):
     Returns:
         str: Quality of rice grain
     """
+
+    /home/isuru/Pictures/reasearch_project/FarmerSmart/backend/mainApp.py
+    mainApp.py
     if rice_type == "Nadu rice":
         if length > 40:
             return "Good"
@@ -228,4 +231,4 @@ if __name__ == '__main__':
     load_rice_model()
     
     # Run the Flask app
-    app.run(debug=True, host='0.0.0.0', port=5001)
+    app.run(debug=True, host='0.0.0.0', port=5002)
