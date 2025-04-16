@@ -1,10 +1,27 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { router } from 'expo-router';
 import { auth, provider } from '@/config/firebase';
-import { signInWithPopup, onAuthStateChanged, signOut as firebaseSignOut } from 'firebase/auth';
-import { Alert } from 'react-native';
+import { 
+  signInWithPopup, 
+  onAuthStateChanged, 
+  signOut as firebaseSignOut,
+  signInWithCredential,
+  GoogleAuthProvider 
+} from 'firebase/auth';
+import { Alert, Platform } from 'react-native';
 import { showNotification } from '@/components/CustomAlert';
 import * as ImagePicker from 'expo-image-picker';
+import * as Google from 'expo-auth-session/providers/google';
+import * as WebBrowser from 'expo-web-browser';
+
+WebBrowser.maybeCompleteAuthSession();
+
+// Use 10.0.2.2 for Android emulator, localhost for web, and computer's IP for physical device
+const API_BASE_URL = Platform.select({
+  android: __DEV__ ? 'http://10.0.2.2:8083' : 'http://192.168.142.99:8083',
+  ios: __DEV__ ? 'http://localhost:8083' : 'http://192.168.142.99:8083',
+  web: 'http://localhost:8083'
+});
 
 const AuthContext = createContext({});
 
@@ -12,9 +29,16 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
 
+  // Configure Google Auth Request
+  const [request, response, promptAsync] = Google.useAuthRequest({
+    expoClientId: 'REPLACE_WITH_YOUR_EXPO_CLIENT_ID',
+    androidClientId: '800988493793-4mmgqqrcddg6lp7h3v8i2gmhgtl36mam.apps.googleusercontent.com',
+    webClientId: '800988493793-4mmgqqrcddg6lp7h3v8i2gmhgtl36mam.apps.googleusercontent.com',
+  });
+
   const fetchUserProfile = async (userId) => {
     try {
-      const response = await fetch(`http://localhost:8083/auth/user/${userId}`);
+      const response = await fetch(`${API_BASE_URL}/auth/user/${userId}`);
       if (!response.ok) throw new Error('Failed to fetch user profile');
       const profileData = await response.json();
       setUserProfile(profileData);
@@ -25,7 +49,7 @@ export function AuthProvider({ children }) {
 
   const signIn = async (email, password) => {
     try {
-      const response = await fetch('http://localhost:8083/auth/login', {
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -50,7 +74,7 @@ export function AuthProvider({ children }) {
 
       // Fetch user profile using the ID from login response
       if (data.id) {
-        const profileResponse = await fetch(`http://localhost:8083/auth/user/${data.userId}`);
+        const profileResponse = await fetch(`${API_BASE_URL}/auth/user/${data.userId}`);
         if (!profileResponse.ok) {
           throw new Error('Failed to fetch user profile');
         }
@@ -69,7 +93,7 @@ export function AuthProvider({ children }) {
 
   const signUp = async (registrationData) => {
     try {
-      const response = await fetch('http://localhost:8083/auth/signup', {
+      const response = await fetch(`${API_BASE_URL}/auth/signup`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -96,11 +120,26 @@ export function AuthProvider({ children }) {
 
   const signInWithGoogle = async () => {
     try {
-      const result = await signInWithPopup(auth, provider);
-      setUser(result.user);
-      router.replace('/(tabs)');
+      if (Platform.OS === 'web') {
+        // Web implementation
+        const result = await signInWithPopup(auth, provider);
+        setUser(result.user);
+        router.replace('/(tabs)');
+      } else {
+        // Mobile implementation
+        const result = await promptAsync();
+        
+        if (result.type === 'success') {
+          const { id_token } = result.params;
+          const credential = GoogleAuthProvider.credential(id_token);
+          const userCredential = await signInWithCredential(auth, credential);
+          setUser(userCredential.user);
+          router.replace('/(tabs)');
+        }
+      }
     } catch (error) {
       console.error('Google Sign-In Error:', error);
+      showNotification('error', 'Google Sign-In failed');
     }
   };
 
@@ -118,7 +157,7 @@ export function AuthProvider({ children }) {
     const checkUser = async () => {
       try {
         if (user?.id) {
-          const profileResponse = await fetch(`http://localhost:8083/auth/user/${user.id}`);
+          const profileResponse = await fetch(`${API_BASE_URL}/auth/user/${user.id}`);
           if (profileResponse.ok) {
             const profileData = await profileResponse.json();
             setUserProfile(profileData);

@@ -12,7 +12,7 @@ import {
   Linking,
   ScrollView,
 } from 'react-native';
-import MapView, { Marker, PROVIDER_GOOGLE, Callout } from 'react-native-maps';
+import MapView, { Marker, Callout } from 'react-native-maps';
 
 interface PestInfestation {
   id?: string;
@@ -35,7 +35,8 @@ interface PestInfestationWithCoordinates extends PestInfestation {
   coordinates?: LocationCoordinates;
 }
 
-const API_BASE_URL = 'http://localhost:8083';
+// Use 10.0.2.2 instead of localhost for Android emulator
+const API_BASE_URL = Platform.OS === 'android' ? 'http://10.0.2.2:8083' : 'http://localhost:8083';
 const NOMINATIM_API = 'https://nominatim.openstreetmap.org';
 
 const ALL_PEST_DATA: PestInfestation[] = [
@@ -44,8 +45,8 @@ const ALL_PEST_DATA: PestInfestation[] = [
     pestName: 'rice water weevil',
     detectedLocation: 'Rajagiriya, Kolonnawa, Colombo District, Western Province',
     farmer: null,
-    latitude: null,
-    longitude: null
+    latitude: 6.9271,
+    longitude: 79.8612
   },
  
   {
@@ -53,14 +54,18 @@ const ALL_PEST_DATA: PestInfestation[] = [
     pestName: 'Rice Blast',
     detectedLocation: 'Nallur, Jaffna',
     detectionDateTime: '2025-04-13T10:39:07.189Z',
-    _class: 'PestInfestation'
+    _class: 'PestInfestation',
+    latitude: 9.6745,
+    longitude: 80.0294
   },
   {
     _id: 'jaffna3',
     pestName: 'Brown Planthopper',
     detectedLocation: 'Chavakachcheri, Jaffna',
     detectionDateTime: '2025-04-12T10:39:07.189Z',
-    _class: 'PestInfestation'
+    _class: 'PestInfestation',
+    latitude: 9.6613,
+    longitude: 80.1616
   }
 ];
 
@@ -104,10 +109,30 @@ const PestMap: React.FC = () => {
     try {
       setLoading(true);
       const pestWithCoordinates: PestInfestationWithCoordinates[] = await Promise.all(
-        ALL_PEST_DATA.map(async (pest) => ({
-          ...pest,
-          coordinates: await geocodeLocation(pest.detectedLocation)
-        }))
+        ALL_PEST_DATA.map(async (pest) => {
+          // If we already have coordinates in the data, use them directly
+          if (pest.latitude && pest.longitude) {
+            return {
+              ...pest,
+              coordinates: {
+                lat: pest.latitude,
+                lon: pest.longitude
+              }
+            };
+          }
+          
+          // Otherwise try geocoding
+          try {
+            const coordinates = await geocodeLocation(pest.detectedLocation);
+            return {
+              ...pest,
+              coordinates
+            };
+          } catch (error) {
+            console.error('Error geocoding location:', error);
+            return pest;
+          }
+        })
       );
 
       setPestInfestations(pestWithCoordinates);
@@ -200,7 +225,6 @@ const PestMap: React.FC = () => {
     <View style={styles.container}>
       <MapView
         ref={mapRef}
-        provider={PROVIDER_GOOGLE}
         style={styles.map}
         initialRegion={INITIAL_REGION}
         onMapReady={() => setMapReady(true)}

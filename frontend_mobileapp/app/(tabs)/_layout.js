@@ -7,6 +7,20 @@ import { HapticTab } from '@/components/HapticTab';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 
+// Define our tab routes so they're properly included
+const tabRoutes = [
+  "index",
+  "disease-detection",
+  "weed-detection",
+  "pest-detection",
+  "pest-map",
+  "rice-quality", 
+  "profile",
+  // Used for deep linking
+  "notifications", 
+  "weather-details"
+];
+
 export default function TabLayout() {
   const colorScheme = useColorScheme();
   const backgroundColor = Colors[colorScheme ?? 'light'].background;
@@ -81,6 +95,19 @@ export default function TabLayout() {
         options={{
           tabBarIcon: ({ color }) => <MaterialIcons name="person" size={28} color={color} />,
           headerShown: false,
+        }}
+      />
+      {/* Hidden screens for notifications and weather details */}
+      <Tabs.Screen
+        name="notifications"
+        options={{
+          href: null, // Make this tab not show in the tab bar
+        }}
+      />
+      <Tabs.Screen
+        name="weather-details"
+        options={{
+          href: null, // Make this tab not show in the tab bar
         }}
       />
     </Tabs>
