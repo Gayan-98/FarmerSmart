@@ -7,8 +7,8 @@
     "reset-project": "node ./scripts/reset-project.js",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web",
-    "test": "jest --watchAll",
+    "web": "EXPO_TARGET=web expo start --web",
+    "test": "jest",
     "lint": "expo lint"
   },
   "jest": {

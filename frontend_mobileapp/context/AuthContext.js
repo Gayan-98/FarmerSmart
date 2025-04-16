@@ -16,8 +16,12 @@ import * as WebBrowser from 'expo-web-browser';
 
 WebBrowser.maybeCompleteAuthSession();
 
-// Use 10.0.2.2 for Android emulator, localhost for web
-const API_BASE_URL = Platform.OS === 'android' ? 'http://10.0.2.2:8083' : 'http://localhost:8083';
+// Use 10.0.2.2 for Android emulator, localhost for web, and computer's IP for physical device
+const API_BASE_URL = Platform.select({
+  android: __DEV__ ? 'http://10.0.2.2:8083' : 'http://192.168.142.99:8083',
+  ios: __DEV__ ? 'http://localhost:8083' : 'http://192.168.142.99:8083',
+  web: 'http://localhost:8083'
+});
 
 const AuthContext = createContext({});
 
