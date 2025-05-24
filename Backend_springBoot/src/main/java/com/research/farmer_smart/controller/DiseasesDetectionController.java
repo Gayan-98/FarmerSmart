@@ -7,6 +7,7 @@ import java.util.List;
 import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -29,6 +30,7 @@ public class DiseasesDetectionController {
     try {
       DiseasesDetection result = diseasesDetectionService.recordDiseasesDetection(request);
       logger.info("Successfully recorded diseases detection: {}", result);
+      System.out.println(result);
       return result;
     } catch (Exception e) {
       logger.error("Error recording diseases detection: ", e);
@@ -51,4 +53,17 @@ public class DiseasesDetectionController {
   public DiseasesDetection getDiseasesDetectionById(@PathVariable String id) {
     return diseasesDetectionService.getPestInfestationById(id);
   }
+
+  @GetMapping
+  public ResponseEntity<List<DiseasesDetection>> getAllDisease() {
+    try {
+      logger.info("Received request to get all pest infestations");
+      List<DiseasesDetection> disease = diseasesDetectionService.getAllDisease();
+      return ResponseEntity.ok(disease);
+    } catch (Exception e) {
+      logger.error("Error getting pest infestations: {}", e.getMessage());
+      return ResponseEntity.internalServerError().build();
+    }
+  }
+
 }

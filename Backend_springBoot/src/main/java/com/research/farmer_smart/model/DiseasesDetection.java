@@ -24,5 +24,11 @@ public class DiseasesDetection {
   private String detectedLocation;
 
   @NotNull
+  private Double longitude;
+
+  @NotNull
+  private Double latitude;
+
+  @NotNull
   private LocalDateTime detectionDateTime;
 }

@@ -86,21 +86,27 @@ export default function DiseaseDetectionScreen() {
   const backgroundColor = colorScheme === "dark" ? "#151718" : "#F5F5F5";
 
   useEffect(() => {
-    (async () => {
+    const getLocation = async () => {
       try {
+        console.log("Requesting location permissions...");
         let { status } = await Location.requestForegroundPermissionsAsync();
+        console.log("Location permission status:", status);
+
         if (status !== "granted") {
           Alert.alert("Permission to access location was denied");
           return;
         }
 
-        const location = await Location.getCurrentPositionAsync({
+        console.log("Getting current position...");
+        const currentLocation = await Location.getCurrentPositionAsync({
           accuracy: Location.Accuracy.Balanced,
         });
-        setLocation(location);
+        console.log("Location obtained:", currentLocation);
+        setLocation(currentLocation);
 
+        // Get location name
         const response = await fetch(
-          `https://nominatim.openstreetmap.org/reverse?lat=${location.coords.latitude}&lon=${location.coords.longitude}&format=json`
+          `https://nominatim.openstreetmap.org/reverse?lat=${currentLocation.coords.latitude}&lon=${currentLocation.coords.longitude}&format=json`
         );
 
         if (!response.ok) {
@@ -126,9 +132,11 @@ export default function DiseaseDetectionScreen() {
             : data.display_name;
 
         setLocationName(fullAddress);
+        console.log("Location name set:", fullAddress);
       } catch (error) {
         console.error("Location error:", error);
-        if (location) {
+        // If we have location coords but failed to get name, still set the fallback
+        if (location?.coords) {
           setLocationName(
             `${location.coords.latitude.toFixed(
               4
@@ -136,25 +144,69 @@ export default function DiseaseDetectionScreen() {
           );
         }
       }
-    })();
+    };
+
+    getLocation();
   }, []);
 
   const saveDiseaseDetection = async (predictionData) => {
     try {
-      if (!userProfile?.farmerDetails?.id) {
+      // Check authentication - handle both cases
+      let farmerId = null;
+      let landLocation = "Unknown Location";
+
+      if (userProfile?.farmerDetails?.id) {
+        farmerId = userProfile.farmerDetails.id;
+        landLocation =
+          userProfile.farmerDetails.landLocation || "Unknown Location";
+      } else if (user?.uid) {
+        // Fallback to user ID if farmer details not available
+        farmerId = user.uid;
+        console.log("Using user.uid as fallback farmer ID:", user.uid);
+      } else {
         console.log("Current user data:", userProfile);
-        Alert.alert("Error", "User not properly authenticated");
-        return;
+        console.log("Current user auth:", user);
+        Alert.alert(
+          "Warning",
+          "User not authenticated. Skipping database save, but showing results."
+        );
+        return; // Don't save but continue with showing results
+      }
+
+      // Debug location data
+      console.log("Current location state:", location);
+      console.log("Location coords:", location?.coords);
+      console.log("Latitude:", location?.coords?.latitude);
+      console.log("Longitude:", location?.coords?.longitude);
+
+      // Check if location is available, if not try to get it again
+      let currentLocation = location;
+      if (
+        !currentLocation?.coords?.latitude ||
+        !currentLocation?.coords?.longitude
+      ) {
+        console.log(
+          "Location not available, trying to get current location..."
+        );
+        try {
+          const freshLocation = await Location.getCurrentPositionAsync({
+            accuracy: Location.Accuracy.Balanced,
+          });
+          currentLocation = freshLocation;
+          console.log("Fresh location obtained:", freshLocation);
+        } catch (locationError) {
+          console.error("Failed to get fresh location:", locationError);
+        }
       }
 
       const backendData = {
-        farmerId: userProfile.farmerDetails.id,
+        farmerId: farmerId,
         diseaseName: predictionData.prediction.toLowerCase(),
-        detectedLocation:
-          locationName ||
-          userProfile.farmerDetails.landLocation ||
-          "Unknown Location",
+        detectedLocation: locationName || landLocation,
         detectionDateTime: new Date().toISOString(),
+        // Add longitude and latitude coordinates
+        longitude: currentLocation?.coords?.longitude || null,
+        latitude: currentLocation?.coords?.latitude || null,
       };
 
       console.log("Sending disease detection data:", backendData);
@@ -170,24 +222,12 @@ export default function DiseaseDetectionScreen() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.log("Successfully not saved disease detection:", savedData);
+        console.log("Failed to save disease detection:", errorData);
         throw new Error(errorData.message || "Failed to save to backend");
       }
 
       const savedData = await response.json();
       console.log("Successfully saved disease detection:", savedData);
-
-      // Fetch disease solution
-      const diseaseName = predictionData.prediction.toLowerCase();
-      const solutionResponse = await fetch(
-        `http://localhost:8083/disease-solutions/disease/${diseaseName}`
-      );
-
-      if (solutionResponse.ok) {
-        const solutionData = await solutionResponse.json();
-        setDiseaseSolution(solutionData[0]); // Get the first solution
-        console.log("Disease solution:", solutionData[0]);
-      }
 
       Alert.alert("Success", "Detection results saved successfully");
     } catch (error) {
@@ -243,23 +283,30 @@ export default function DiseaseDetectionScreen() {
       console.log("Backend Response:", data);
       setPrediction(data);
 
-      const diseaseName = data.prediction;
-      console.log(diseaseName);
-      const solutionResponse = await fetch(
-        `http://localhost:8083/disease-solutions/disease/${diseaseName}`,
-        console.log(diseaseName)
-      );
+      // Fetch disease solution first
+      const diseaseName = data.prediction.toLowerCase();
+      console.log("Disease name:", diseaseName);
 
-      console.log(solutionResponse);
+      try {
+        const solutionResponse = await fetch(
+          `http://localhost:8083/disease-solutions/disease/${encodeURIComponent(
+            diseaseName
+          )}`
+        );
 
-      if (solutionResponse.ok) {
-        const solutionData = await solutionResponse.json();
-        setDiseaseSolution(solutionData[0]); // Get the first solution
+        console.log("Solution response:", solutionResponse);
+
+        if (solutionResponse.ok) {
+          const solutionData = await solutionResponse.json();
+          setDiseaseSolution(solutionData[0]); // Get the first solution
+          console.log("Disease solution:", solutionData[0]);
+        }
+      } catch (solutionError) {
+        console.error("Error fetching solution:", solutionError);
+        // Continue even if solution fetch fails
       }
 
-      Alert.alert("Success", "Detection results saved successfully");
-
-      // Save the detection results
+      // Save the detection results (this will handle auth issues gracefully)
       await saveDiseaseDetection(data);
     } catch (error) {
       console.error("Error:", error);
