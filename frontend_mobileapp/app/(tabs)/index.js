@@ -211,6 +211,12 @@ export default function HomeScreen() {
             color="#9C27B0"
             onPress={() => router.push('/(tabs)/disease-detection')}
           />
+          <QuickActionButton
+            icon="map"
+            label="Disease Map"
+            color="#F44336"
+            onPress={() => router.push('/(tabs)/disease-map')}
+          />
         </View>
       </View>
 
