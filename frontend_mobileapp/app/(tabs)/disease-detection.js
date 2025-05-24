@@ -22,7 +22,7 @@ import { useAuth } from "@/context/AuthContext";
 import * as Location from "expo-location";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
-const scale = SCREEN_WIDTH / 375; 
+const scale = SCREEN_WIDTH / 375;
 
 const normalize = (size) => {
   return Math.round(scale * size);
@@ -142,36 +142,40 @@ export default function DiseaseDetectionScreen() {
   const saveDiseaseDetection = async (predictionData) => {
     try {
       if (!userProfile?.farmerDetails?.id) {
-        console.log('Current user data:', userProfile);
-        Alert.alert('Error', 'User not properly authenticated');
+        console.log("Current user data:", userProfile);
+        Alert.alert("Error", "User not properly authenticated");
         return;
       }
 
       const backendData = {
         farmerId: userProfile.farmerDetails.id,
         diseaseName: predictionData.prediction.toLowerCase(),
-        detectedLocation: locationName || userProfile.farmerDetails.landLocation || 'Unknown Location',
-        detectionDateTime: new Date().toISOString()
+        detectedLocation:
+          locationName ||
+          userProfile.farmerDetails.landLocation ||
+          "Unknown Location",
+        detectionDateTime: new Date().toISOString(),
       };
 
-      console.log('Sending disease detection data:', backendData);
+      console.log("Sending disease detection data:", backendData);
 
       // Save disease detection
-      const response = await fetch('http://localhost:8083/diseases-detection', {
-        method: 'POST',
+      const response = await fetch("http://localhost:8083/diseases-detection", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(backendData)
+        body: JSON.stringify(backendData),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to save to backend');
+        console.log("Successfully not saved disease detection:", savedData);
+        throw new Error(errorData.message || "Failed to save to backend");
       }
 
       const savedData = await response.json();
-      console.log('Successfully saved disease detection:', savedData);
+      console.log("Successfully saved disease detection:", savedData);
 
       // Fetch disease solution
       const diseaseName = predictionData.prediction.toLowerCase();
@@ -182,14 +186,13 @@ export default function DiseaseDetectionScreen() {
       if (solutionResponse.ok) {
         const solutionData = await solutionResponse.json();
         setDiseaseSolution(solutionData[0]); // Get the first solution
-        console.log('Disease solution:', solutionData[0]);
+        console.log("Disease solution:", solutionData[0]);
       }
 
-      Alert.alert('Success', 'Detection results saved successfully');
-
+      Alert.alert("Success", "Detection results saved successfully");
     } catch (error) {
-      console.error('Error saving detection:', error);
-      Alert.alert('Error', error.message || 'Failed to save detection results');
+      console.error("Error saving detection:", error);
+      Alert.alert("Error", error.message || "Failed to save detection results");
     }
   };
 
@@ -237,17 +240,17 @@ export default function DiseaseDetectionScreen() {
 
       // Parse the response
       const data = await apiResponse.json();
-      console.log("Backend Response:", data); 
+      console.log("Backend Response:", data);
       setPrediction(data);
 
       const diseaseName = data.prediction;
-      console.log(diseaseName)
+      console.log(diseaseName);
       const solutionResponse = await fetch(
         `http://localhost:8083/disease-solutions/disease/${diseaseName}`,
         console.log(diseaseName)
       );
 
-      console.log(solutionResponse)
+      console.log(solutionResponse);
 
       if (solutionResponse.ok) {
         const solutionData = await solutionResponse.json();
@@ -255,7 +258,6 @@ export default function DiseaseDetectionScreen() {
       }
 
       Alert.alert("Success", "Detection results saved successfully");
-    
 
       // Save the detection results
       await saveDiseaseDetection(data);
@@ -336,7 +338,7 @@ export default function DiseaseDetectionScreen() {
                     color="#9C27B0"
                   />
                   <ThemedText style={styles.predictionText}>
-                  Class {prediction.prediction}
+                    Class {prediction.prediction}
                   </ThemedText>
                   <ThemedText style={styles.predictionDescription}>
                     Analysis completed successfully
@@ -538,14 +540,14 @@ const styles = StyleSheet.create({
     marginTop: normalize(30),
   },
   sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: normalize(16),
   },
   sectionTitle: {
     fontSize: normalize(20),
-    fontWeight: 'bold',
-    color: '#333333',
+    fontWeight: "bold",
+    color: "#333333",
     marginLeft: normalize(8),
   },
   tipsContainer: {
@@ -566,7 +568,7 @@ const styles = StyleSheet.create({
   tipText: {
     marginLeft: normalize(12),
     fontSize: normalize(14),
-    color: '#333333',
+    color: "#333333",
     flex: 1,
   },
   predictionResult: {
