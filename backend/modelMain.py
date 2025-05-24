@@ -11,7 +11,7 @@ CORS(app)
 
 # Load models into memory
 models = {
-    "disease_detection": load_model('./models/disease_model.keras'),
+    "disease_detection": load_model('../models/disease_model.keras'),
     # "pest_detection": load_model('models/pest_model.keras'),
     # "weed_seed_detection": load_model('models/weed_seed_model.keras'),
     # "rice_quality_detection": load_model('models/rice_quality_model.keras')
@@ -62,7 +62,7 @@ def predict():
     predicted_class = np.argmax(prediction, axis=1)[0]
 
     # Define class labels for the disease detection model
-    class_labels = ['Bacterial Blight', 'Blast', 'Brown Spot', 'Tungro']
+    class_labels = ['bacterial blight', 'blast', 'brown spot', 'tungro']
 
     # Ensure the predicted_class is within the valid range
     if predicted_class < 0 or predicted_class >= len(class_labels):
