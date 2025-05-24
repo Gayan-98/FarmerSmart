@@ -5,6 +5,7 @@ import com.research.farmer_smart.exception.DiseasesDetectionException;
 import com.research.farmer_smart.exception.FarmerNotFoundException;
 import com.research.farmer_smart.model.DiseasesDetection;
 import com.research.farmer_smart.model.Farmer;
+import com.research.farmer_smart.model.PestInfestation;
 import com.research.farmer_smart.repository.DiseasesDetectionRepository;
 import com.research.farmer_smart.repository.FarmerRepository;
 import com.research.farmer_smart.service.DiseasesDetectionService;
@@ -13,6 +14,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+
 
 @Service
 @AllArgsConstructor
@@ -66,4 +68,13 @@ public class DiseasesDetectionServiceImpl implements DiseasesDetectionService {
             oneWeekAgo
     );
   }
+
+
+  @Override
+  public List<DiseasesDetection> getAllDisease() {
+
+    return diseasesDetectionRepository.findAll();
+  }
+
+
 }

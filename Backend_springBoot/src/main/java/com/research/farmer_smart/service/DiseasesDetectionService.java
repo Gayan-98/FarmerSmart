@@ -15,4 +15,8 @@ public interface DiseasesDetectionService {
   DiseasesDetection getPestInfestationById(String id);
 
   List<DiseasesDetection> searchByLocation(String location);
+
+  List<DiseasesDetection> getAllDisease();
+
+
 }
