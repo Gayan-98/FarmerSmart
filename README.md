@@ -6,7 +6,7 @@ FarmerSmart is a mobile application designed to support farmers in improving cro
 
 ## System Overview
 
-![System Diagram](image.png)
+![System Diagram](image.png)   ![Official website](https://researh-site.netlify.app/)   
 
 ### **System Architecture**
 The system is divided into three main layers:
